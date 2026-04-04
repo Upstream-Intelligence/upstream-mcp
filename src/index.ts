@@ -14,6 +14,12 @@ import { lookupFeeSchedule } from './tools/lookup_fee_schedule.js';
 import { scanClaim } from './tools/scan_claim.js';
 import { getPayerScorecard } from './tools/get_payer_scorecard.js';
 import { comparePayers } from './tools/compare_payers.js';
+import { checkPayerBehavior } from './tools/check_payer_behavior.js';
+import { getIndustrySignals } from './tools/get_industry_signals.js';
+import { checkPriorAuthReadiness } from './tools/check_prior_auth_readiness.js';
+import { getDenialClusters } from './tools/get_denial_clusters.js';
+import { getAbaSessionTracker } from './tools/get_aba_session_tracker.js';
+import { getPatientPropensity } from './tools/get_patient_propensity.js';
 
 const tools = [
   checkNcciEdits,
@@ -22,6 +28,12 @@ const tools = [
   scanClaim,
   getPayerScorecard,
   comparePayers,
+  checkPayerBehavior,
+  getIndustrySignals,
+  checkPriorAuthReadiness,
+  getDenialClusters,
+  getAbaSessionTracker,
+  getPatientPropensity,
 ];
 
 const server = new Server(

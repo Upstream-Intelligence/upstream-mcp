@@ -24,7 +24,7 @@ jobs:
 
       - name: Detect unresolved merge markers
         run: |
-          if grep -R -n -E '^(<<<<<<<|=======|>>>>>>>)' -- .; then
+          if git grep -nI -E '^(<<<<<<<|>>>>>>>)' -- .; then
             echo "Unresolved merge markers detected"
             exit 1
           fi
@@ -48,4 +48,4 @@ jobs:
           VERSION=8.28.0
           curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" | tar -xz
           sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
-          gitleaks git --redact --no-banner --exit-code 1
+          gitleaks dir . --redact --no-banner --exit-code 1

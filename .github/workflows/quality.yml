@@ -1,0 +1,53 @@
+name: Quality Gate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect unresolved merge markers
+        run: |
+          if git grep -nI -E '^(<<<<<<<|>>>>>>>)' -- .; then
+            echo "Unresolved merge markers detected"
+            exit 1
+          fi
+
+      - name: Detect oversized tracked files (>20MB)
+        run: |
+          oversized=0
+          while IFS= read -r -d '' file; do
+            size=$(wc -c < "$file")
+            if [ "$size" -gt 20971520 ]; then
+              echo "Oversized tracked file: $file (${size} bytes)"
+              oversized=1
+            fi
+          done < <(git ls-files -z)
+          if [ "$oversized" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Secret scan (new leaks in PR commits)
+        run: |
+          VERSION=8.28.0
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" | tar -xz
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          gitleaks git \
+            --redact \
+            --no-banner \
+            --exit-code 1 \
+            --log-opts "${{ github.event.pull_request.base.sha }}..${{ github.sha }}"

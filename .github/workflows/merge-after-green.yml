@@ -1,0 +1,160 @@
+name: Merge After Green
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number
+        required: true
+        type: string
+      merge_method:
+        description: Merge method (squash|merge|rebase)
+        required: false
+        default: squash
+        type: choice
+        options:
+          - squash
+          - merge
+          - rebase
+      delete_branch:
+        description: Delete branch after merge
+        required: false
+        default: true
+        type: boolean
+  repository_dispatch:
+    types: [merge_after_green]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+  issues: write
+
+concurrency:
+  group: merge-after-green-${{ github.repository }}-${{ github.event.issue.number || inputs.pr || github.event.client_payload.pr || github.event.client_payload.pr_number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  resolve-request:
+    if: >-
+      github.event_name != 'issue_comment' ||
+      (github.event.issue.pull_request && startsWith(github.event.comment.body, '/merge-after-green'))
+    runs-on: ubuntu-latest
+    outputs:
+      pr: ${{ steps.resolve.outputs.pr }}
+      merge_method: ${{ steps.resolve.outputs.merge_method }}
+      delete_branch: ${{ steps.resolve.outputs.delete_branch }}
+    steps:
+      - name: Resolve request payload
+        id: resolve
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const event = context.eventName;
+            let pr = null;
+            let mergeMethod = 'squash';
+            let deleteBranch = true;
+
+            if (event === 'workflow_dispatch') {
+              pr = Number(core.getInput('pr'));
+              mergeMethod = (core.getInput('merge_method') || 'squash').toLowerCase();
+              deleteBranch = (core.getInput('delete_branch') || 'true') === 'true';
+            } else if (event === 'repository_dispatch') {
+              const payload = context.payload.client_payload || {};
+              pr = Number(payload.pr_number || payload.pr);
+              mergeMethod = String(payload.merge_method || 'squash').toLowerCase();
+              deleteBranch = payload.delete_branch !== false;
+            } else if (event === 'issue_comment') {
+              const login = context.payload.comment.user.login;
+              const perm = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: login,
+              });
+              const allowed = new Set(['admin', 'maintain', 'write']);
+              if (!allowed.has(perm.data.permission)) {
+                core.setFailed(`User ${login} permission '${perm.data.permission}' cannot trigger merges.`);
+                return;
+              }
+
+              pr = Number(context.payload.issue.number);
+              const tokens = (context.payload.comment.body || '').trim().split(/\s+/).filter(Boolean);
+              if (tokens[1]) {
+                mergeMethod = tokens[1].toLowerCase();
+              }
+              if (tokens.includes('--keep-branch')) {
+                deleteBranch = false;
+              }
+            }
+
+            const allowedMethods = new Set(['squash', 'merge', 'rebase']);
+            if (!Number.isInteger(pr) || pr <= 0) {
+              core.setFailed('Missing or invalid pull request number.');
+              return;
+            }
+            if (!allowedMethods.has(mergeMethod)) {
+              core.setFailed(`Invalid merge method '${mergeMethod}'. Use squash, merge, or rebase.`);
+              return;
+            }
+
+            core.setOutput('pr', String(pr));
+            core.setOutput('merge_method', mergeMethod);
+            core.setOutput('delete_branch', deleteBranch ? 'true' : 'false');
+
+  merge:
+    needs: resolve-request
+    if: needs.resolve-request.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ needs.resolve-request.outputs.pr }}
+      MERGE_METHOD: ${{ needs.resolve-request.outputs.merge_method }}
+      DELETE_BRANCH: ${{ needs.resolve-request.outputs.delete_branch }}
+    steps:
+      - name: Validate pull request state
+        run: |
+          set -euo pipefail
+          pr_json=$(gh pr view "$PR_NUMBER" --json state,isDraft,baseRefName,url,reviewDecision)
+          echo "$pr_json" | jq .
+
+          state=$(echo "$pr_json" | jq -r '.state')
+          draft=$(echo "$pr_json" | jq -r '.isDraft')
+          base=$(echo "$pr_json" | jq -r '.baseRefName')
+
+          if [[ "$state" != "OPEN" ]]; then
+            echo "PR #$PR_NUMBER is not open"
+            exit 1
+          fi
+          if [[ "$draft" == "true" ]]; then
+            echo "PR #$PR_NUMBER is draft"
+            exit 1
+          fi
+
+          # Enforce merge-only into protected branches.
+          gh api "repos/${{ github.repository }}/branches/$base/protection" >/dev/null
+
+      - name: Wait for required checks to turn green
+        run: |
+          gh pr checks "$PR_NUMBER" --required --watch --fail-fast --interval 10
+
+      - name: Enforce required reviews are satisfied
+        run: |
+          set -euo pipefail
+          review_state=$(gh pr view "$PR_NUMBER" --json reviewDecision --jq '.reviewDecision')
+          if [[ "$review_state" == "CHANGES_REQUESTED" || "$review_state" == "REVIEW_REQUIRED" ]]; then
+            echo "Required review state is '$review_state'"
+            exit 1
+          fi
+
+      - name: Enable auto-merge
+        run: |
+          set -euo pipefail
+          delete_arg=""
+          if [[ "$DELETE_BRANCH" == "true" ]]; then
+            delete_arg="--delete-branch"
+          fi
+          gh pr merge "$PR_NUMBER" --auto "--$MERGE_METHOD" $delete_arg
+          gh pr comment "$PR_NUMBER" --body "Auto-merge enabled with \`$MERGE_METHOD\`. PR will merge automatically once all required checks are green."

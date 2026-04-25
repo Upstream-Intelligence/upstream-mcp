@@ -8,8 +8,12 @@
 
 Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. Without leaving your Claude workflow.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/Upstream-Intelligence/upstream-mcp?color=0454F1)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/Upstream-Intelligence/upstream-mcp?style=flat&color=0454F1)](https://github.com/Upstream-Intelligence/upstream-mcp/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/Upstream-Intelligence/upstream-mcp?color=0454F1)](https://github.com/Upstream-Intelligence/upstream-mcp/commits/main)
+[![Issues](https://img.shields.io/github/issues/Upstream-Intelligence/upstream-mcp?color=0454F1)](https://github.com/Upstream-Intelligence/upstream-mcp/issues)
 [![upstream.cx](https://img.shields.io/badge/upstream-cx-0454F1)](https://upstream.cx)
+[![Newsletter](https://img.shields.io/badge/newsletter-subscribe-0454F1)](https://upstream.cx/newsletter)
 
 </div>
 

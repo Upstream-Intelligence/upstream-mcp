@@ -1,14 +1,42 @@
-# @upstream-health/mcp-server
+<div align="center">
 
-MCP (Model Context Protocol) server for Upstream's **Revenue Intelligence Platform** — giving Claude direct access to payer behavioral intelligence, denial prediction, claim risk, and network-wide industry signals. Built for RCM directors, billing teams, and ABA/SNF/PT operators who need answers without leaving their workflow.
+<img src="https://upstream.cx/brand/upstream-wordmark-light.svg" alt="Upstream" width="220" />
 
-Upstream monitors payer behavior across 200+ practices in real time. When UHC quietly shifts adjudication criteria, Upstream sees the pattern network-wide before it reaches your claims. This MCP brings that intelligence into Claude.
+# upstream-mcp
+
+### Bring Upstream Care Intelligence into Claude.
+
+Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. Without leaving your Claude workflow.
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![upstream.cx](https://img.shields.io/badge/upstream-cx-0454F1)](https://upstream.cx)
+
+</div>
+
+---
+
+## What this is
+
+A Model Context Protocol server that exposes Upstream's Care Intelligence Platform as a set of tools Claude can call directly.
+
+Your billing team is in Claude already. They are asking Claude to draft appeals, decode denial codes, and explain payer behavior. With this MCP installed, Claude does not guess. Claude calls Upstream's network of operators and gets the real answer with specific dollar impact and the recommended fix.
+
+Works across ABA, SNF, PT/OT, dental, dialysis, imaging, home health, and behavioral health. The MCP routes specialty queries to the right backend.
+
+---
 
 ## Install
 
-### Claude Desktop (recommended)
+### Claude Code
 
-Add to your `~/Library/Application Support/Claude/claude_desktop_config.json`:
+```bash
+claude mcp add upstream -- npx -y @upstream-health/mcp-server
+export UPSTREAM_API_KEY=your_key_here
+```
+
+### Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -24,128 +52,109 @@ Add to your `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-### Claude Code (CLI)
-
-```bash
-claude mcp add upstream -- npx -y @upstream-health/mcp-server
-```
-
-Then set your key:
-
-```bash
-export UPSTREAM_API_KEY=your_key_here
-```
-
-Get a free API key at **https://upstream.cx/developers/keys**
+Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys](https://upstream.cx/developers/keys)
 
 ---
 
-## Tools
+## Tools available to Claude
 
-### Claim Intelligence
+### Claim intelligence
 
-| Tool | Description |
-|------|-------------|
-| `scan_claim` | Pre-submission claim risk scan. Checks NCCI edits, auth requirements, denial probability, and payer patterns. Returns a risk score (0–100) and specific issues to fix before submission. |
-| `check_ncci_edits` | Check if two CPT codes can be billed together. Returns edit type (PTP/MUE), modifier options, and clinical rationale. |
-| `check_prior_auth_readiness` | Score a prior auth 0–100 before submission. Returns risk factors with specific fix instructions and estimated approval probability. Specialties: ABA, Dental, PT/OT, SNF. |
+| Tool | What it does |
+|---|---|
+| `scan_claim` | Pre-submission claim risk scan. Checks NCCI edits, authorization requirements, denial probability, and payer specific patterns. Returns a risk score from 0 to 100 with specific issues to fix before submission. |
+| `check_ncci_edits` | Check whether two CPT codes can be billed together. Returns edit type (PTP or MUE), modifier options, and clinical rationale. |
+| `check_prior_auth_readiness` | Score a prior authorization request from 0 to 100 before submission. Returns risk factors with specific fix instructions and estimated approval probability. Specialty support: ABA, dental, PT/OT, SNF, with more added quarterly. |
 
-### Denial Intelligence
+### Denial intelligence
 
-| Tool | Description |
-|------|-------------|
-| `lookup_denial_code` | Look up any CARC denial reason code. Returns plain-English explanation, root causes, corrective actions, and regulatory basis. |
-| `get_denial_clusters` | Active denial clusters with root cause labels and dollar impact. `cross_customer_signal: true` means the pattern is affecting multiple practices nationally — not just yours. |
-| `get_industry_signals` | Cross-customer network anomalies: denial patterns affecting multiple practices simultaneously. Upstream's network moat — intelligence neither Silna nor Adonis can replicate. |
+| Tool | What it does |
+|---|---|
+| `lookup_denial_code` | Look up any CARC denial reason code. Returns plain English explanation, root causes, corrective actions, and the regulatory basis. |
+| `get_denial_clusters` | Active denial clusters with root cause labels and dollar impact. When `cross_customer_signal: true`, the pattern is affecting multiple operators in the network simultaneously. Not just yours. |
+| `get_industry_signals` | Network wide anomalies. Denial patterns affecting multiple practices on the same day. The early warning that no single practice tool can produce. |
 
-### Payer Intelligence
+### Payer intelligence
 
-| Tool | Description |
-|------|-------------|
-| `get_payer_scorecard` | A–F grade and denial rate for a payer by specialty. Includes top denial codes, payment timing, and appeal success rates. |
-| `compare_payers` | Compare two payers side by side on denial rates, payment timing, and appeal success. |
-| `check_payer_behavior` | Behavioral risk score, cluster classification (Aggressive Denier / Slow Payer / Prompt Payer / Underpayer), and recent policy changes for a payer. |
+| Tool | What it does |
+|---|---|
+| `get_payer_scorecard` | A to F grade and denial rate for a payer by specialty. Includes top denial codes, payment timing percentiles, and historical appeal success rates. |
+| `compare_payers` | Side by side comparison of two payers on denial rates, payment timing, and appeal success. |
+| `check_payer_behavior` | Behavioral risk score and cluster classification (Aggressive Denier, Slow Payer, Prompt Payer, Underpayer). Includes recent policy changes and the specific dates of detection. |
 
-### Fee Schedule & Reimbursement
+### Reimbursement
 
-| Tool | Description |
-|------|-------------|
-| `lookup_fee_schedule` | CMS national fee schedule rates for any CPT code. Returns facility/non-facility rates, RVUs, and geographic adjusters. |
+| Tool | What it does |
+|---|---|
+| `lookup_fee_schedule` | CMS national fee schedule rates for any CPT code. Returns facility and non facility rates, RVUs, and geographic adjusters. |
 
-### Specialty Workflows
+### Specialty workflows
 
-| Tool | Description |
-|------|-------------|
-| `get_aba_session_tracker` | ABA authorization status for a patient: authorized hours, sessions used, hours remaining, expiry date, renewal urgency (red/amber/green). Use in ABA billing workflows. |
-| `get_patient_propensity` | Patient collectibility score (0–100), collection probability, and recommended collection approach, powered by Upstream's ML propensity model. |
+| Tool | What it does |
+|---|---|
+| `get_authorization_status` | Authorization state for a patient. Hours or units authorized, used, remaining, expiry date, and renewal urgency (red, amber, green). Routes per specialty (ABA session units, SNF stay days, dental procedure caps, PT/OT visit limits, imaging procedure approvals, dialysis treatment authorizations). |
+| `get_patient_propensity` | Patient collectibility score from 0 to 100 with collection probability and recommended approach. Powered by Upstream's propensity model. |
 
 ---
 
-## Example questions to ask Claude
+## Example questions Claude can answer
 
-**Claim checks:**
-- "Scan this claim for UnitedHealthcare: CPT 97153, 97155, diagnosis F84.0, POS 11"
+**Claim work:**
+- "Scan this claim for UnitedHealthcare. CPT 97153, 97155. Diagnosis F84.0. POS 11."
 - "Can I bill 97153 and 97155 together on the same claim?"
-- "Score this prior auth before I submit it — auth ID 441-B"
+- "Score this prior auth before I submit. Auth ID 441-B."
 
 **Denial work:**
 - "What does denial code 97 mean and how do I fix it?"
 - "What denial clusters are active in my account right now?"
-- "Are there any industry-wide signals for ABA denials this month?"
+- "Show me network wide denial signals from the last 7 days."
 
 **Payer intelligence:**
-- "What grade does Aetna get for ABA claims?"
-- "Compare UnitedHealthcare and Cigna on denial rates"
-- "Is UHC an aggressive denier for SNF claims right now? Any recent policy changes?"
+- "What grade does Aetna get for this specialty?"
+- "Compare UnitedHealthcare and Cigna on denial rates."
+- "Has UnitedHealthcare made any recent policy changes for SNF claims?"
 
 **Reimbursement:**
-- "What's the Medicare rate for CPT 97153?"
-- "What are the RVUs for 97155, facility vs non-facility?"
+- "What is the Medicare rate for CPT 97153?"
+- "Show me RVUs for 97155 facility versus non facility."
 
 **Specialty workflows:**
-- "Check ABA session status for patient ref UP-4492"
-- "What's the collectibility score for patient ref UP-8831?"
+- "Check authorization status for patient ref UP-4492."
+- "What is the collectibility score for patient ref UP-8831?"
 
 ---
 
-## What makes Upstream different
+## Why an MCP
 
-Upstream is not a rules engine. It's a behavioral monitoring network.
+Most generic chat assistants hallucinate on healthcare billing. They give plausible CARC interpretations that are wrong. They confidently state Aetna's denial rate when no one ever measured it.
 
-| Capability | Upstream | Silna | Adonis |
-|-----------|---------|-------|--------|
-| Payer behavioral fingerprinting | ✓ | — | — |
-| Cross-customer network signals | ✓ | — | — |
-| Pre-submission denial probability | ✓ | ✓ | ✓ |
-| NCCI/fee schedule lookup | ✓ | ✓ | — |
-| Adjudication shift early warning | ✓ (26 days avg) | — | — |
-| ABA session authorization tracking | ✓ | — | — |
+Upstream's MCP gives Claude actual data. Real CMS reference tables. Real network behavioral signals. Real payer scorecards measured against operator outcomes.
 
-The network effect compounds with scale. 200+ practices means patterns surface 3–4 weeks before isolated practices notice anything.
+Claude becomes accurate. Your team trusts the answer.
 
 ---
 
 ## Environment variables
 
 | Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `UPSTREAM_API_KEY` | No (free tier) | — | API key from upstream.cx/developers/keys |
-| `UPSTREAM_BASE_URL` | No | `https://api.upstream.cx` | Override for local dev or staging |
+|---|---|---|---|
+| `UPSTREAM_API_KEY` | Optional for free tier | (none) | Get one at [upstream.cx/developers/keys](https://upstream.cx/developers/keys) |
+| `UPSTREAM_BASE_URL` | Optional | `https://api.upstream.cx` | Override for local development or sandbox testing |
 
 ---
 
 ## Local development
 
 ```bash
-git clone https://github.com/upstream-health/mcp-server
-cd mcp-server
+git clone https://github.com/Upstream-Intelligence/upstream-mcp
+cd upstream-mcp
 npm install
-cp .env.example .env   # add your key
+cp .env.example .env
 npm run build
 npm test
 ```
 
-Run the server locally against Claude Desktop by pointing to the built output:
+Point Claude at the local build:
 
 ```json
 {
@@ -165,14 +174,52 @@ Run the server locally against Claude Desktop by pointing to the built output:
 
 ## Rate limits
 
-The free tier includes 100 API calls/month. Paid tiers start at $49/month. Upgrade at https://upstream.cx/developers/keys.
+| Tier | Calls per month | Cost |
+|---|---|---|
+| Free | 500 | $0 |
+| Pioneer (beta) | 5,000 | $49 |
+| Production | Higher caps available | See [upstream.cx/pricing](https://upstream.cx/pricing) |
 
-When the monthly quota is exceeded, tools return a clear error message with your current tier and a direct link to upgrade — no silent failures.
+When the monthly quota is exceeded, tools return a clear error with current tier and a direct upgrade link. No silent failures. No degraded responses.
+
+---
+
+## What people ask
+
+**Does this work without the paid platform?**
+Yes. The free tier gives you 500 calls per month with no credit card. Claim scanning, denial code lookups, fee schedule queries, and CARC parsing all work on the free tier.
+
+**What does the network signal include?**
+When `get_industry_signals` returns a result, it means multiple operators across the network are seeing the same pattern simultaneously. Aggregated. Anonymized. Statistically validated. Never PHI.
+
+**How fresh is the data?**
+Payer scorecards refresh nightly. Network signals fire in near real time when significance thresholds are crossed. CMS reference tables update on the CMS publication cadence (CARC quarterly, NCCI quarterly, fee schedule annual).
+
+**Is my data secure?**
+Calls to the MCP server are encrypted in transit. Free tier queries are stateless. Paid tier queries are scoped to your customer tenant. The MCP works on patient reference IDs (your internal IDs), not on patient names or DOB.
+
+**Why not just use Claude with web search?**
+Public web data on payer behavior is incomplete, stale, and often wrong. Upstream measures payer behavior against the operator network's actual claim outcomes. The signal is what is happening, not what someone said is happening.
+
+**How does Upstream compare to traditional clearinghouses?**
+Clearinghouses move claims. Upstream interprets payer behavior. Different lane. Most operators run both.
 
 ---
 
 ## Related
 
-- [upstream.cx](https://upstream.cx) — Revenue Intelligence Platform
-- [upstream.cx/developers](https://upstream.cx/developers) — API documentation
-- [upstream-community](https://github.com/upstream-cx/upstream-community) — Open-source ML reference implementations
+- [upstream.cx](https://upstream.cx) Care Intelligence Platform
+- [upstream-skills](https://github.com/Upstream-Intelligence/upstream-skills) Claude Code skill pack for billing teams
+- [upstream-community](https://github.com/Upstream-Intelligence/upstream-community) Open ML reference implementations
+- [upstream.cx/developers](https://upstream.cx/developers) Full API documentation
+- [Newsletter](https://upstream.cx/newsletter) Monthly network signals digest
+
+---
+
+<div align="center">
+
+**[upstream.cx](https://upstream.cx)** · hello@upstream.cx
+
+Care Intelligence Platform.
+
+</div>

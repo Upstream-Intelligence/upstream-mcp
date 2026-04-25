@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest a new tool or capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What workflow problem does this solve?
+      description: Be specific. Real billing scenarios beat abstract requests.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed tool or change
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

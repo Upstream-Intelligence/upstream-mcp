@@ -236,6 +236,10 @@ Clearinghouses move claims. Upstream interprets payer behavior. Different lane. 
 
 ---
 
+---
+
+Built by [Upstream Intelligence](https://upstream.cx). Read the methodology at [engine.upstream.cx](https://engine.upstream.cx). Pioneer Program: [upstream.cx/pioneer](https://upstream.cx/pioneer).
+
 <div align="center">
 
 **[upstream.cx](https://upstream.cx)** · hello@upstream.cx

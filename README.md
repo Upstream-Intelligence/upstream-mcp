@@ -27,6 +27,22 @@ Your billing team is in Claude already. They are asking Claude to draft appeals,
 
 Works across ABA, SNF, PT/OT, dental, dialysis, imaging, home health, and behavioral health. The MCP routes specialty queries to the right backend.
 
+## What it looks like
+
+```json
+{
+  "alert_type": "denial_risk",
+  "payer": "Anthem BCBS",
+  "cpt_code": "99214",
+  "risk_score": 0.87,
+  "primary_reason": "Missing modifier 25 for same-day E&M + procedure",
+  "action": "Add modifier 25 before claim submission",
+  "estimated_denial_dollar": 312.00
+}
+```
+
+This is what a high-risk denial alert looks like before you submit the claim. No PHI — aggregate payer behavior patterns only.
+
 ---
 
 ## Install

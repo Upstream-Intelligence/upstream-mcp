@@ -1,0 +1,16 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: Upstream-Intelligence/.github/.github/workflows/reusable-ci.yml@main
+    with:
+      stack: node

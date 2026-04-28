@@ -1,0 +1,17 @@
+name: Autopilot
+
+on:
+  schedule:
+    - cron: '0 9 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  autopilot:
+    uses: Upstream-Intelligence/.github/.github/workflows/reusable-autopilot.yml@main
+    with:
+      stack: node
+      auto_merge: true

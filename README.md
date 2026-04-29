@@ -39,7 +39,7 @@ Works across ABA, SNF, PT/OT, dental, dialysis, imaging, home health, and behavi
 }
 ```
 
-This is what a high-risk denial alert looks like before you submit the claim. No PHI — aggregate payer behavior patterns only.
+This is what a high-risk denial alert looks like before you submit the claim. No PHI. Aggregate payer behavior patterns only.
 
 ---
 

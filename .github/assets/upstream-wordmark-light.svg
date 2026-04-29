@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 70">
+  <!--
+    Upstream U Mark — Wordmark lockup
+    U mark (left) + "upstream" in Inter/system bold (right).
+    Baseline-aligned. Scaled mark at 60px, text matching cap height.
+  -->
+  <defs>
+    <linearGradient id="mark-wm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- U mark scaled to 60px height, baseline at y=60 -->
+  <g transform="translate(0,4) scale(0.62)">
+    <path fill="url(#mark-wm)" d="
+      M 9,12
+      L 9,70
+      Q 9,97 50,97
+      Q 91,97 91,70
+      L 91,40
+      L 73,54
+      Q 71,57 71,60
+      L 71,70
+      Q 71,85 50,85
+      Q 29,85 29,70
+      L 29,12
+      Z
+    "/>
+  </g>
+
+  <!-- "upstream" text — Inter Bold / system sans-serif, cap height matches mark -->
+  <text
+    x="72"
+    y="53"
+    font-family="'Inter', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif"
+    font-weight="700"
+    font-size="36"
+    letter-spacing="-0.5"
+    fill="#231F20">upstream</text>
+</svg>

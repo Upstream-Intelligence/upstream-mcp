@@ -34,7 +34,7 @@ Works across ABA, SNF, PT/OT, dental, dialysis, imaging, home health, and behavi
 ### Claude Code
 
 ```bash
-claude mcp add upstream -- npx -y @upstream-health/mcp-server
+claude mcp add upstream -- npx -y @upstream-intelligence/mcp
 export UPSTREAM_API_KEY=your_key_here
 ```
 
@@ -47,7 +47,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "upstream": {
       "command": "npx",
-      "args": ["-y", "@upstream-health/mcp-server"],
+      "args": ["-y", "@upstream-intelligence/mcp"],
       "env": {
         "UPSTREAM_API_KEY": "your_key_here"
       }

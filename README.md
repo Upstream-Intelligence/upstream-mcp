@@ -4,7 +4,7 @@
 
 # upstream-mcp
 
-### Bring Upstream Care Intelligence into Claude.
+### Pre-submission claim risk in your terminal.
 
 Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. Without leaving your Claude workflow.
 
@@ -21,7 +21,7 @@ Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. W
 
 ## What this is
 
-A Model Context Protocol server that exposes Upstream's Care Intelligence Platform as a set of tools Claude can call directly.
+A Model Context Protocol server that exposes Upstream's Payer intelligence Platform as a set of tools Claude can call directly.
 
 Your billing team is in Claude already. They are asking Claude to draft appeals, decode denial codes, and explain payer behavior. With this MCP installed, Claude does not guess. Claude calls Upstream's network of operators and gets the real answer with specific dollar impact and the recommended fix.
 
@@ -62,42 +62,45 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 
 ## Tools available to Claude
 
+`[Free]` tools work on the free evaluation tier (rate limited, no PHI).
+`[Paid]` tools require an `starter` or `pro` API tier. See [Code license vs. service terms](#code-license-vs-service-terms) below.
+
 ### Claim intelligence
 
-| Tool | What it does |
-|---|---|
-| `scan_claim` | Pre-submission claim risk scan. Checks NCCI edits, authorization requirements, denial probability, and payer specific patterns. Returns a risk score from 0 to 100 with specific issues to fix before submission. |
-| `check_ncci_edits` | Check whether two CPT codes can be billed together. Returns edit type (PTP or MUE), modifier options, and clinical rationale. |
-| `check_prior_auth_readiness` | Score a prior authorization request from 0 to 100 before submission. Returns risk factors with specific fix instructions and estimated approval probability. Specialty support: ABA, dental, PT/OT, SNF, with more added quarterly. |
+| Tool | Tier | What it does |
+|---|---|---|
+| `scan_claim` | `[Free]` rate limited | Pre-submission claim risk scan. Checks NCCI edits, authorization requirements, denial probability, and payer specific patterns. Returns a risk score from 0 to 100 with specific issues to fix before submission. |
+| `check_ncci_edits` | `[Free]` | Check whether two CPT codes can be billed together. Returns edit type (PTP or MUE), modifier options, and clinical rationale. |
+| `check_prior_auth_readiness` | `[Free]` rate limited | Score a prior authorization request from 0 to 100 before submission. Returns risk factors with specific fix instructions and estimated approval probability. Specialty support: ABA, dental, PT/OT, SNF, with more added quarterly. |
 
 ### Denial intelligence
 
-| Tool | What it does |
-|---|---|
-| `lookup_denial_code` | Look up any CARC denial reason code. Returns plain English explanation, root causes, corrective actions, and the regulatory basis. |
-| `get_denial_clusters` | Active denial clusters with root cause labels and dollar impact. When `cross_customer_signal: true`, the pattern is affecting multiple operators in the network simultaneously. Not just yours. |
-| `get_industry_signals` | Network wide anomalies. Denial patterns affecting multiple practices on the same day. The early warning that no single practice tool can produce. |
+| Tool | Tier | What it does |
+|---|---|---|
+| `lookup_denial_code` | `[Free]` | Look up any CARC denial reason code. Returns plain English explanation, root causes, corrective actions, and the regulatory basis. |
+| `get_denial_clusters` | `[Paid]` | Active denial clusters with root cause labels and dollar impact. When `cross_customer_signal: true`, the pattern is affecting multiple operators in the network simultaneously. Not just yours. |
+| `get_industry_signals` | `[Paid]` | Network wide anomalies. Denial patterns affecting multiple practices on the same day. The early warning that no single practice tool can produce. |
 
 ### Payer intelligence
 
-| Tool | What it does |
-|---|---|
-| `get_payer_scorecard` | A to F grade and denial rate for a payer by specialty. Includes top denial codes, payment timing percentiles, and historical appeal success rates. |
-| `compare_payers` | Side by side comparison of two payers on denial rates, payment timing, and appeal success. |
-| `check_payer_behavior` | Behavioral risk score and cluster classification (Aggressive Denier, Slow Payer, Prompt Payer, Underpayer). Includes recent policy changes and the specific dates of detection. |
+| Tool | Tier | What it does |
+|---|---|---|
+| `get_payer_scorecard` | `[Paid]` | A to F grade and denial rate for a payer by specialty. Includes top denial codes, payment timing percentiles, and historical appeal success rates. |
+| `compare_payers` | `[Paid]` | Side by side comparison of two payers on denial rates, payment timing, and appeal success. |
+| `check_payer_behavior` | `[Paid]` | Behavioral risk score and cluster classification (Aggressive Denier, Slow Payer, Prompt Payer, Underpayer). Includes recent policy changes and the specific dates of detection. |
 
 ### Reimbursement
 
-| Tool | What it does |
-|---|---|
-| `lookup_fee_schedule` | CMS national fee schedule rates for any CPT code. Returns facility and non facility rates, RVUs, and geographic adjusters. |
+| Tool | Tier | What it does |
+|---|---|---|
+| `lookup_fee_schedule` | `[Free]` | CMS national fee schedule rates for any CPT code. Returns facility and non facility rates, RVUs, and geographic adjusters. |
 
 ### Specialty workflows
 
-| Tool | What it does |
-|---|---|
-| `get_authorization_status` | Authorization state for a patient. Hours or units authorized, used, remaining, expiry date, and renewal urgency (red, amber, green). Routes per specialty (ABA session units, SNF stay days, dental procedure caps, PT/OT visit limits, imaging procedure approvals, dialysis treatment authorizations). |
-| `get_patient_propensity` | Patient collectibility score from 0 to 100 with collection probability and recommended approach. Powered by Upstream's propensity model. |
+| Tool | Tier | What it does |
+|---|---|---|
+| `get_authorization_status` | `[Paid]` | Authorization state for a patient. Hours or units authorized, used, remaining, expiry date, and renewal urgency (red, amber, green). Routes per specialty (ABA session units, SNF stay days, dental procedure caps, PT/OT visit limits, imaging procedure approvals, dialysis treatment authorizations). |
+| `get_patient_propensity` | `[Paid]` | Patient collectibility score from 0 to 100 with collection probability and recommended approach. Powered by Upstream's propensity model. |
 
 ---
 
@@ -210,9 +213,24 @@ Clearinghouses move claims. Upstream interprets payer behavior. Different lane. 
 
 ---
 
+## Code license vs. service terms
+
+The MCP client code in this repository is **MIT licensed**. Fork it, audit it, embed it in your stack.
+
+The Upstream API service that this client calls is governed by separate **Service Terms of Use** at [upstream.cx/terms](https://upstream.cx/terms), including:
+
+- Paid plan rate limits and tier-gated tools (see `[Free]` / `[Paid]` markers in the tool tables above).
+- BAA required for any workflow involving Protected Health Information.
+- Acceptable use policy.
+- Free evaluation tier: 500 calls/month, no PHI, restricted to `[Free]` tools.
+
+The license on the client code does not grant API service access. Production usage requires an organization-scoped paid key. Request access at [upstream.cx/developers/keys](https://upstream.cx/developers/keys).
+
+---
+
 ## Related
 
-- [upstream.cx](https://upstream.cx) Care Intelligence Platform
+- [upstream.cx](https://upstream.cx) Payer intelligence Platform
 - [upstream-skills](https://github.com/Upstream-Intelligence/upstream-skills) Claude Code skill pack for billing teams
 - [upstream-community](https://github.com/Upstream-Intelligence/upstream-community) Open ML reference implementations
 - [upstream.cx/developers](https://upstream.cx/developers) Full API documentation
@@ -224,6 +242,6 @@ Clearinghouses move claims. Upstream interprets payer behavior. Different lane. 
 
 **[upstream.cx](https://upstream.cx)** · hello@upstream.cx
 
-Care Intelligence Platform.
+Payer intelligence Platform.
 
 </div>

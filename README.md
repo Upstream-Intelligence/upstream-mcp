@@ -103,7 +103,7 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 | Tool | Tier | What it does |
 |---|---|---|
 | `get_payer_scorecard` | `[Paid]` | A to F grade and denial rate for a payer by specialty. Includes top denial codes, payment timing percentiles, and historical appeal success rates. |
-| `compare_payers` | `[Paid]` | Side by side comparison of two payers on denial rates, payment timing, and appeal success. |
+| `compare_practice_to_community` | `[Free, lead-capture]` | Compare your practice's payer-specific metrics (denial rate, days-to-pay, appeal win rate) against the Upstream network aggregate for that payer + specialty. Requires email — saved as a lead. Returns delta metrics + risk-adjusted CTA. |
 | `check_payer_behavior` | `[Paid]` | Behavioral risk score and cluster classification (Aggressive Denier, Slow Payer, Prompt Payer, Underpayer). Includes recent policy changes and the specific dates of detection. |
 
 ### Reimbursement

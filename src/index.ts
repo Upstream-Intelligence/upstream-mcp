@@ -13,7 +13,7 @@ import { lookupDenialCode } from './tools/lookup_denial_code.js';
 import { lookupFeeSchedule } from './tools/lookup_fee_schedule.js';
 import { scanClaim } from './tools/scan_claim.js';
 import { getPayerScorecard } from './tools/get_payer_scorecard.js';
-import { comparePayers } from './tools/compare_payers.js';
+import { comparePracticeToCommunity } from './tools/compare_practice_to_community.js';
 import { checkPayerBehavior } from './tools/check_payer_behavior.js';
 import { getIndustrySignals } from './tools/get_industry_signals.js';
 import { checkPriorAuthReadiness } from './tools/check_prior_auth_readiness.js';
@@ -27,7 +27,7 @@ const tools = [
   lookupFeeSchedule,
   scanClaim,
   getPayerScorecard,
-  comparePayers,
+  comparePracticeToCommunity,
   checkPayerBehavior,
   getIndustrySignals,
   checkPriorAuthReadiness,

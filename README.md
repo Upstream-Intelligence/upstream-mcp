@@ -117,6 +117,7 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 | Tool | Tier | What it does |
 |---|---|---|
 | `get_authorization_status` | `[Paid]` | Authorization state for a patient. Hours or units authorized, used, remaining, expiry date, and renewal urgency (red, amber, green). Routes per specialty (ABA session units, SNF stay days, dental procedure caps, PT/OT visit limits, imaging procedure approvals, dialysis treatment authorizations). |
+| `get_aba_session_tracker` | `[Paid]` | ABA session authorization status by patient reference: authorized hours, sessions used, hours remaining, expiry date, risk level (red / amber / green), renewal urgency. Use in ABA billing workflows. Patient reference is the anonymized token from your Upstream dashboard — never PHI. |
 | `get_patient_propensity` | `[Paid]` | Patient collectibility score from 0 to 100 with collection probability and recommended approach. Powered by Upstream's propensity model. |
 
 ---

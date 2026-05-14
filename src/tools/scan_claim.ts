@@ -36,6 +36,6 @@ export const scanClaim = {
       place_of_service?: string;
     },
   ) {
-    return client.post('/api/v1/public/claim-scan/', args);
+    return client.post('/api/v1/public/claim-review/', args);
   },
 };

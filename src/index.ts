@@ -19,7 +19,11 @@ import { getIndustrySignals } from './tools/get_industry_signals.js';
 import { checkPriorAuthReadiness } from './tools/check_prior_auth_readiness.js';
 import { getDenialClusters } from './tools/get_denial_clusters.js';
 import { getAbaSessionTracker } from './tools/get_aba_session_tracker.js';
+import { getAbaPayerComparison } from './tools/get_aba_payer_comparison.js';
 import { getPatientPropensity } from './tools/get_patient_propensity.js';
+import { queryDentalFeeSchedule } from './tools/query_dental_fee_schedule.js';
+import { scoreDentalClaimDenialRisk } from './tools/score_dental_claim_denial_risk.js';
+import { getDentalPayerDrift } from './tools/get_dental_payer_drift.js';
 
 const tools = [
   checkNcciEdits,
@@ -33,7 +37,11 @@ const tools = [
   checkPriorAuthReadiness,
   getDenialClusters,
   getAbaSessionTracker,
+  getAbaPayerComparison,
   getPatientPropensity,
+  queryDentalFeeSchedule,
+  scoreDentalClaimDenialRisk,
+  getDentalPayerDrift,
 ];
 
 const server = new Server(

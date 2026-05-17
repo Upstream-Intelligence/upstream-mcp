@@ -13,6 +13,7 @@
 
 Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. Without leaving your Claude workflow.
 
+[![npm](https://img.shields.io/npm/v/@upstream-intelligence/mcp?color=0454F1)](https://www.npmjs.com/package/@upstream-intelligence/mcp)
 [![License](https://img.shields.io/github/license/Upstream-Intelligence/upstream-mcp?color=0454F1)](LICENSE)
 [![Issues](https://img.shields.io/github/issues/Upstream-Intelligence/upstream-mcp?color=0454F1)](https://github.com/Upstream-Intelligence/upstream-mcp/issues)
 [![upstream.cx](https://img.shields.io/badge/upstream-cx-0454F1)](https://upstream.cx)
@@ -24,7 +25,7 @@ Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. W
 
 ## What this is
 
-A Model Context Protocol server that exposes Upstream's Payer intelligence Platform as a set of tools Claude can call directly.
+A Model Context Protocol server that exposes Upstream's Care Intelligence Platform as a set of tools Claude can call directly.
 
 Your billing team is in Claude already. They are asking Claude to draft appeals, decode denial codes, and explain payer behavior. With this MCP installed, Claude does not guess. Claude calls Upstream's network of operators and gets the real answer with specific dollar impact and the recommended fix.
 
@@ -267,6 +268,6 @@ Built by [Upstream Intelligence](https://upstream.cx). Read the methodology at [
 
 **[upstream.cx](https://upstream.cx)** · hello@upstream.cx
 
-Payer intelligence Platform.
+Care Intelligence Platform.
 
 </div>

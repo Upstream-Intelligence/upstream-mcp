@@ -1,17 +1,50 @@
 {
   "name": "@upstream-intelligence/mcp",
   "version": "0.2.0",
-  "description": "MCP server for Upstream care intelligence",
+  "description": "MCP server for Upstream's Care Intelligence Platform. Pre-submission claim risk, denial intelligence, and payer behavioral signals for Claude.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "upstream-mcp": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "anthropic",
+    "healthcare",
+    "revenue-cycle-management",
+    "denial-prediction",
+    "payer-behavior",
+    "prior-authorization",
+    "ncci",
+    "carc",
+    "medical-billing",
+    "upstream"
+  ],
+  "author": "Upstream Intelligence <hello@upstream.cx> (https://upstream.cx)",
+  "license": "MIT",
+  "homepage": "https://github.com/Upstream-Intelligence/upstream-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Upstream-Intelligence/upstream-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Upstream-Intelligence/upstream-mcp/issues"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0"

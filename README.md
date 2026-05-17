@@ -9,9 +9,9 @@
 
 # upstream-mcp
 
-### Pre-submission claim risk in your terminal.
+### Catches the denial before it happens.
 
-Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. Without leaving your Claude workflow.
+Pre-submission claim risk in your terminal. Live denial intelligence. Payer behavioral signals. Without leaving your Claude workflow.
 
 [![npm](https://img.shields.io/npm/v/@upstream-intelligence/mcp?color=0454F1)](https://www.npmjs.com/package/@upstream-intelligence/mcp)
 [![License](https://img.shields.io/github/license/Upstream-Intelligence/upstream-mcp?color=0454F1)](LICENSE)

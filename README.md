@@ -1,8 +1,10 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/upstream-wordmark-dark.svg">
-  <img src=".github/assets/upstream-wordmark-light.svg" alt="Upstream" width="220" />
+  <source media="(prefers-color-scheme: dark)"
+          srcset="https://raw.githubusercontent.com/Upstream-Intelligence/.github/main/.github/assets/upstream-wordmark-dark.svg">
+  <img src="https://raw.githubusercontent.com/Upstream-Intelligence/.github/main/.github/assets/upstream-wordmark-light.svg"
+       alt="Upstream" width="220" />
 </picture>
 
 # upstream-mcp
@@ -248,13 +250,14 @@ The license on the client code does not grant API service access. Production usa
 
 ## Related
 
-- [upstream.cx](https://upstream.cx) Payer intelligence Platform
-- [upstream-skills](https://github.com/Upstream-Intelligence/upstream-skills) Claude Code skill pack for billing teams
-- [upstream-community](https://github.com/Upstream-Intelligence/upstream-community) Open ML reference implementations
-- [upstream.cx/developers](https://upstream.cx/developers) Full API documentation
-- [Newsletter](https://upstream.cx/newsletter) Monthly network signals digest
+Part of the [Upstream Intelligence ecosystem](https://github.com/Upstream-Intelligence).
 
----
+- **upstream-mcp** — you are here
+- [upstream-skills](https://github.com/Upstream-Intelligence/upstream-skills) — Claude Code skills for billing teams
+- [upstream-community](https://github.com/Upstream-Intelligence/upstream-community) — open ML methodology
+- [awesome-payer-risk](https://github.com/Upstream-Intelligence/awesome-payer-risk) — curated RCM resources
+
+Product: [upstream.cx](https://upstream.cx) · [Newsletter](https://upstream.cx/newsletter) · [Pricing](https://upstream.cx/pricing)
 
 ---
 

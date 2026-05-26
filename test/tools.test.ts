@@ -2,6 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { UpstreamAPIClient } from '../src/client.js';
 import { UpstreamAPIError } from '../src/errors.js';
 import { checkNcciEdits } from '../src/tools/check_ncci_edits.js';
+import {
+  getSyntheticPackReadiness,
+  getSyntheticPackScenarios,
+  getSyntheticPackSchema,
+  getSyntheticPackSources,
+  listSyntheticDataPacks,
+} from '../src/tools/synthetic_data.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -166,5 +173,64 @@ describe('UpstreamAPIError', () => {
     expect(err.message).toBe('Something went wrong');
     expect(err.statusCode).toBe(403);
     expect(err).toBeInstanceOf(Error);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Synthetic data tools
+// ---------------------------------------------------------------------------
+
+describe('synthetic data tools', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('calls backend data catalog without embedding dataset rows', async () => {
+    const mockFetch = makeFetchMock(200, {
+      synthetic_only: true,
+      catalog: { listing_count: 20, listings: [] },
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    const result = await listSyntheticDataPacks.execute(apiClient);
+
+    expect(result).toEqual({
+      synthetic_only: true,
+      catalog: { listing_count: 20, listings: [] },
+    });
+    const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
+    expect(calledUrl.pathname).toBe('/api/v1/data/catalog/');
+  });
+
+  it('routes pack-specific synthetic data tools to metadata endpoints', async () => {
+    const mockFetch = makeFetchMock(200, { synthetic_only: true, no_phi: true });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    await getSyntheticPackSchema.execute(apiClient, { pack_id: 'aba' });
+    await getSyntheticPackSources.execute(apiClient, { pack_id: 'aba' });
+    await getSyntheticPackScenarios.execute(apiClient, { pack_id: 'aba' });
+    await getSyntheticPackReadiness.execute(apiClient, { pack_id: 'aba' });
+
+    const paths = mockFetch.mock.calls.map(([url]) => (url as URL).pathname);
+    expect(paths).toEqual([
+      '/api/v1/data/packs/aba/schema/',
+      '/api/v1/data/packs/aba/sources/',
+      '/api/v1/data/packs/aba/scenarios/',
+      '/api/v1/data/packs/aba/readiness/',
+    ]);
+  });
+
+  it('documents synthetic-only and no-PHI boundaries in tool descriptions', () => {
+    const descriptions = [
+      listSyntheticDataPacks,
+      getSyntheticPackSchema,
+      getSyntheticPackSources,
+      getSyntheticPackScenarios,
+      getSyntheticPackReadiness,
+    ].map((tool) => tool.description.toLowerCase());
+
+    expect(descriptions.join('\n')).toContain('synthetic');
+    expect(descriptions.join('\n')).toContain('phi');
+    expect(descriptions.join('\n')).not.toContain('real payer truth');
   });
 });

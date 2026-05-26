@@ -23,6 +23,13 @@ import { getAbaPayerComparison } from './tools/get_aba_payer_comparison.js';
 import { getPatientPropensity } from './tools/get_patient_propensity.js';
 import { queryDentalFeeSchedule } from './tools/query_dental_fee_schedule.js';
 import { scoreDentalClaimDenialRisk } from './tools/score_dental_claim_denial_risk.js';
+import {
+  getSyntheticPackReadiness,
+  getSyntheticPackScenarios,
+  getSyntheticPackSchema,
+  getSyntheticPackSources,
+  listSyntheticDataPacks,
+} from './tools/synthetic_data.js';
 import { getDentalPayerDrift } from './tools/get_dental_payer_drift.js';
 
 const tools = [
@@ -42,6 +49,11 @@ const tools = [
   queryDentalFeeSchedule,
   scoreDentalClaimDenialRisk,
   getDentalPayerDrift,
+  listSyntheticDataPacks,
+  getSyntheticPackSchema,
+  getSyntheticPackSources,
+  getSyntheticPackScenarios,
+  getSyntheticPackReadiness,
 ];
 
 const server = new Server(

@@ -24,10 +24,20 @@ import { getPatientPropensity } from './tools/get_patient_propensity.js';
 import { queryDentalFeeSchedule } from './tools/query_dental_fee_schedule.js';
 import { scoreDentalClaimDenialRisk } from './tools/score_dental_claim_denial_risk.js';
 import {
+  compileSyntheticScenarioDsl,
+  getSyntheticPackAdjudicationTraceSummary,
+  getSyntheticPackContractFeeSchedule,
+  getSyntheticPackEpisodeManifest,
+  getSyntheticPackEvaluationManifest,
+  getSyntheticPackPayerContractSimulation,
+  getSyntheticPackPayerPolicySummary,
   getSyntheticPackReadiness,
+  getSyntheticPackRealism,
   getSyntheticPackScenarios,
   getSyntheticPackSchema,
   getSyntheticPackSources,
+  getSyntheticPackTransactionSurfaceManifest,
+  getSyntheticPackWorldManifest,
   listSyntheticDataPacks,
 } from './tools/synthetic_data.js';
 import { getDentalPayerDrift } from './tools/get_dental_payer_drift.js';
@@ -54,6 +64,16 @@ const tools = [
   getSyntheticPackSources,
   getSyntheticPackScenarios,
   getSyntheticPackReadiness,
+  getSyntheticPackWorldManifest,
+  getSyntheticPackEpisodeManifest,
+  getSyntheticPackPayerPolicySummary,
+  getSyntheticPackContractFeeSchedule,
+  getSyntheticPackPayerContractSimulation,
+  getSyntheticPackEvaluationManifest,
+  getSyntheticPackAdjudicationTraceSummary,
+  getSyntheticPackTransactionSurfaceManifest,
+  getSyntheticPackRealism,
+  compileSyntheticScenarioDsl,
 ];
 
 const server = new Server(

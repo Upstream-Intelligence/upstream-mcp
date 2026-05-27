@@ -3,10 +3,20 @@ import { UpstreamAPIClient } from '../src/client.js';
 import { UpstreamAPIError } from '../src/errors.js';
 import { checkNcciEdits } from '../src/tools/check_ncci_edits.js';
 import {
+  compileSyntheticScenarioDsl,
+  getSyntheticPackAdjudicationTraceSummary,
+  getSyntheticPackContractFeeSchedule,
+  getSyntheticPackEpisodeManifest,
+  getSyntheticPackEvaluationManifest,
+  getSyntheticPackPayerContractSimulation,
+  getSyntheticPackPayerPolicySummary,
   getSyntheticPackReadiness,
+  getSyntheticPackRealism,
   getSyntheticPackScenarios,
   getSyntheticPackSchema,
   getSyntheticPackSources,
+  getSyntheticPackTransactionSurfaceManifest,
+  getSyntheticPackWorldManifest,
   listSyntheticDataPacks,
 } from '../src/tools/synthetic_data.js';
 
@@ -220,6 +230,59 @@ describe('synthetic data tools', () => {
     ]);
   });
 
+  it('routes every expanded synthetic data tool to its semantically matching backend endpoint', async () => {
+    const mockFetch = makeFetchMock(200, { synthetic_only: true, no_phi: true });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    const args = { pack_id: 'aba' };
+    await listSyntheticDataPacks.execute(apiClient);
+    await getSyntheticPackSchema.execute(apiClient, args);
+    await getSyntheticPackSources.execute(apiClient, args);
+    await getSyntheticPackScenarios.execute(apiClient, args);
+    await getSyntheticPackReadiness.execute(apiClient, args);
+    await getSyntheticPackWorldManifest.execute(apiClient, args);
+    await getSyntheticPackEpisodeManifest.execute(apiClient, args);
+    await getSyntheticPackPayerPolicySummary.execute(apiClient, args);
+    await getSyntheticPackContractFeeSchedule.execute(apiClient, args);
+    await getSyntheticPackPayerContractSimulation.execute(apiClient, args);
+    await getSyntheticPackEvaluationManifest.execute(apiClient, args);
+    await getSyntheticPackAdjudicationTraceSummary.execute(apiClient, args);
+    await getSyntheticPackTransactionSurfaceManifest.execute(apiClient, args);
+    await getSyntheticPackRealism.execute(apiClient, args);
+    await compileSyntheticScenarioDsl.execute(apiClient, {
+      pack_id: 'aba',
+      scenario_type: 'authorization-surge',
+    });
+
+    const calls = mockFetch.mock.calls.map(([url, init]) => ({
+      method: (init as RequestInit).method,
+      path: (url as URL).pathname,
+      body: (init as RequestInit).body,
+    }));
+    expect(calls).toEqual([
+      { method: 'GET', path: '/api/v1/data/catalog/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/schema/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/sources/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/scenarios/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/readiness/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/world/manifest/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/episodes/manifest/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/payer-policy/summary/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/contracts/fee-schedule/summary/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/payer-contract-simulator/report/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/evaluation/manifest/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/adjudication-trace/summary/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/transaction-surface/manifest/', body: undefined },
+      { method: 'GET', path: '/api/v1/data/packs/aba/realism/', body: undefined },
+      {
+        method: 'POST',
+        path: '/api/v1/data/scenario-dsl/compile/',
+        body: JSON.stringify({ pack_id: 'aba', scenario_type: 'authorization-surge' }),
+      },
+    ]);
+  });
+
   it('documents synthetic-only and no-PHI boundaries in tool descriptions', () => {
     const descriptions = [
       listSyntheticDataPacks,
@@ -227,10 +290,22 @@ describe('synthetic data tools', () => {
       getSyntheticPackSources,
       getSyntheticPackScenarios,
       getSyntheticPackReadiness,
+      getSyntheticPackWorldManifest,
+      getSyntheticPackEpisodeManifest,
+      getSyntheticPackPayerPolicySummary,
+      getSyntheticPackContractFeeSchedule,
+      getSyntheticPackPayerContractSimulation,
+      getSyntheticPackEvaluationManifest,
+      getSyntheticPackAdjudicationTraceSummary,
+      getSyntheticPackTransactionSurfaceManifest,
+      getSyntheticPackRealism,
+      compileSyntheticScenarioDsl,
     ].map((tool) => tool.description.toLowerCase());
 
     expect(descriptions.join('\n')).toContain('synthetic');
     expect(descriptions.join('\n')).toContain('phi');
-    expect(descriptions.join('\n')).not.toContain('real payer truth');
+    expect(descriptions.join('\n')).not.toContain('de-identified');
+    expect(descriptions.join('\n')).toContain('not as proof of observed real payer frequencies');
+    expect(descriptions.join('\n')).not.toMatch(/\bis real payer truth\b/);
   });
 });

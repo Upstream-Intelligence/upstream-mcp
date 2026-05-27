@@ -96,7 +96,7 @@ export const getSyntheticPackWorldManifest = {
     'Returns entity and lineage references only; never returns generated rows, PHI, customer data, or paid datasets.',
   inputSchema: PACK_ID_INPUT_SCHEMA,
   async execute(client: UpstreamAPIClient, args: { pack_id: string }) {
-    return client.get(packPath(args.pack_id, 'episodes/manifest'));
+    return client.get(packPath(args.pack_id, 'world/manifest'));
   },
 };
 
@@ -107,7 +107,7 @@ export const getSyntheticPackEpisodeManifest = {
     'Use this for workflow planning only; do not expose episode journeys or generated artifacts in public responses.',
   inputSchema: PACK_ID_INPUT_SCHEMA,
   async execute(client: UpstreamAPIClient, args: { pack_id: string }) {
-    return client.get(packPath(args.pack_id, 'world/manifest'));
+    return client.get(packPath(args.pack_id, 'episodes/manifest'));
   },
 };
 
@@ -129,7 +129,7 @@ export const getSyntheticPackContractFeeSchedule = {
     'Returns synthetic contract shape only, not official fee schedules or customer contracts.',
   inputSchema: PACK_ID_INPUT_SCHEMA,
   async execute(client: UpstreamAPIClient, args: { pack_id: string }) {
-    return client.get(packPath(args.pack_id, 'payer-contract-simulator/report'));
+    return client.get(packPath(args.pack_id, 'contracts/fee-schedule/summary'));
   },
 };
 
@@ -140,7 +140,7 @@ export const getSyntheticPackPayerContractSimulation = {
     'Preserves synthetic-only wording and exposes no proprietary payer weights.',
   inputSchema: PACK_ID_INPUT_SCHEMA,
   async execute(client: UpstreamAPIClient, args: { pack_id: string }) {
-    return client.get(packPath(args.pack_id, 'contracts/fee-schedule/summary'));
+    return client.get(packPath(args.pack_id, 'payer-contract-simulator/report'));
   },
 };
 
@@ -151,7 +151,7 @@ export const getSyntheticPackEvaluationManifest = {
     'Returns task families and artifact references only, not generated eval corpora.',
   inputSchema: PACK_ID_INPUT_SCHEMA,
   async execute(client: UpstreamAPIClient, args: { pack_id: string }) {
-    return client.get(packPath(args.pack_id, 'adjudication-trace/summary'));
+    return client.get(packPath(args.pack_id, 'evaluation/manifest'));
   },
 };
 
@@ -162,7 +162,7 @@ export const getSyntheticPackAdjudicationTraceSummary = {
     'Never returns line-level paid traces, generated rows, PHI, customer data, or real-payer-truth claims.',
   inputSchema: PACK_ID_INPUT_SCHEMA,
   async execute(client: UpstreamAPIClient, args: { pack_id: string }) {
-    return client.get(packPath(args.pack_id, 'evaluation/manifest'));
+    return client.get(packPath(args.pack_id, 'adjudication-trace/summary'));
   },
 };
 
@@ -184,7 +184,7 @@ export const getSyntheticPackRealism = {
     'Use for validation planning, not as proof of observed real payer frequencies.',
   inputSchema: PACK_ID_INPUT_SCHEMA,
   async execute(client: UpstreamAPIClient, args: { pack_id: string }) {
-    return client.get(packPath(args.pack_id, 'readiness'));
+    return client.get(packPath(args.pack_id, 'realism'));
   },
 };
 

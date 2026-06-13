@@ -1,7 +1,7 @@
 {
   "name": "@upstream-intelligence/mcp",
   "version": "0.2.0",
-  "description": "MCP server for Upstream's Care Intelligence Platform. Pre-submission claim risk, denial intelligence, and payer behavioral signals for Claude.",
+  "description": "MCP server for Upstream's Care Intelligence Platform. The Workflow Bridge for pre-submission claim risk, denial intelligence, payer behavioral signals, and prior-auth readiness.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -21,11 +21,10 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "claude",
-    "anthropic",
+    "workflow-bridge",
     "healthcare",
     "revenue-cycle-management",
-    "denial-prediction",
+    "prior-auth-readiness",
     "payer-behavior",
     "prior-authorization",
     "ncci",

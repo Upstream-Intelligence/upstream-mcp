@@ -9,9 +9,9 @@
 
 # upstream-mcp
 
-### Catches the denial before it happens.
+### Care Intelligence tools for any workflow.
 
-Pre-submission claim risk in your terminal. Live denial intelligence. Payer behavioral signals. Without leaving your Claude workflow.
+Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. Prior-auth readiness. The Workflow Bridge between clinical operations and payer systems.
 
 [![npm](https://img.shields.io/npm/v/@upstream-intelligence/mcp?color=0454F1)](https://www.npmjs.com/package/@upstream-intelligence/mcp)
 [![License](https://img.shields.io/github/license/Upstream-Intelligence/upstream-mcp?color=0454F1)](LICENSE)
@@ -25,9 +25,9 @@ Pre-submission claim risk in your terminal. Live denial intelligence. Payer beha
 
 ## What this is
 
-A Model Context Protocol server that exposes Upstream's Care Intelligence Platform as a set of tools Claude can call directly.
+A Model Context Protocol server that exposes Upstream's Care Intelligence Platform as MCP tools. The Workflow Bridge pattern connects your clinical operations tooling to live payer intelligence without shipping PHI upstream.
 
-Your billing team is in Claude already. They are asking Claude to draft appeals, decode denial codes, and explain payer behavior. With this MCP installed, Claude does not guess. Claude calls Upstream's network of operators and gets the real answer with specific dollar impact and the recommended fix.
+Billing teams use it to get real answers on claim risk, denial codes, payer behavior, and prior-auth readiness. With upstream-mcp installed, the assistant calls Upstream's network of operators and returns the real signal with specific dollar impact and the recommended fix.
 
 Works across ABA, SNF, PT/OT, dental, dialysis, imaging, home health, and behavioral health. The MCP routes specialty queries to the right backend.
 
@@ -35,17 +35,19 @@ Works across ABA, SNF, PT/OT, dental, dialysis, imaging, home health, and behavi
 
 ```json
 {
-  "alert_type": "denial_risk",
-  "payer": "Anthem BCBS",
-  "cpt_code": "99214",
-  "risk_score": 0.87,
-  "primary_reason": "Missing modifier 25 for same-day E&M + procedure",
-  "action": "Add modifier 25 before claim submission",
-  "estimated_denial_dollar": 312.00
+  "coverage_state": "active",
+  "prior_auth_required": true,
+  "readiness_state": "ready_when_assembled",
+  "requirements": ["BCBA credentials current", "FBA within payer window"],
+  "step_therapy": null,
+  "documentation": ["Treatment plan with measurable goals", "Supervision ratio"],
+  "next_safe_action": "Gather documentation before submitting. All requirements can be satisfied."
 }
 ```
 
-This is what a high-risk denial alert looks like before you submit the claim. No PHI. Aggregate payer behavior patterns only.
+Prior-auth readiness for a payer + CPT check. No PHI. Payer name and CPT code only.
+
+The Upstream Data ecosystem at [data.upstream.cx](https://data.upstream.cx) provides structured payer intelligence via the `/data/v1` API surface (prior-auth readiness, requirements benchmarks, denial risk). This MCP is the Workflow Bridge to those surfaces.
 
 ---
 
@@ -89,9 +91,9 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 
 | Tool | Tier | What it does |
 |---|---|---|
-| `scan_claim` | `[Free]` rate limited | Pre-submission claim risk scan. Checks NCCI edits, authorization requirements, denial probability, and payer specific patterns. Returns a risk score from 0 to 100 with specific issues to fix before submission. |
+| `scan_claim` | `[Free]` rate limited | Pre-submission claim risk scan. Checks NCCI edits, authorization requirements, denial probability, and payer specific patterns. Returns a risk signal with the specific issues to fix before submission. |
 | `check_ncci_edits` | `[Free]` | Check whether two CPT codes can be billed together. Returns edit type (PTP or MUE), modifier options, and clinical rationale. |
-| `check_prior_auth_readiness` | `[Free]` rate limited | Score a prior authorization request from 0 to 100 before submission. Returns risk factors with specific fix instructions and estimated approval probability. Specialty support: ABA, dental, PT/OT, SNF, with more added quarterly. |
+| `check_prior_auth_readiness` | `[Free]` rate limited | Check prior-auth readiness for a payer and CPT code. Returns readiness_state (ready_when_assembled, no_prior_auth_required, or unknown), requirements, documentation needed, and next_safe_action. Specialty support: ABA, dental, PT/OT, SNF, with more added quarterly. |
 
 ### Denial intelligence
 
@@ -121,7 +123,7 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 |---|---|---|
 | `get_authorization_status` | `[Paid]` | Authorization state for a patient. Hours or units authorized, used, remaining, expiry date, and renewal urgency (red, amber, green). Routes per specialty (ABA session units, SNF stay days, dental procedure caps, PT/OT visit limits, imaging procedure approvals, dialysis treatment authorizations). |
 | `get_aba_session_tracker` | `[Paid]` | ABA session authorization status by patient reference: authorized hours, sessions used, hours remaining, expiry date, risk level (red / amber / green), renewal urgency. Use in ABA billing workflows. Patient reference is the anonymized token from your Upstream dashboard — never PHI. |
-| `get_patient_propensity` | `[Paid]` | Patient collectibility score from 0 to 100 with collection probability and recommended approach. Powered by Upstream's propensity model. |
+| `get_patient_propensity` | `[Paid]` | Patient collectibility signal with collection probability and recommended approach. Powered by Upstream's propensity model. |
 
 ---
 
@@ -130,7 +132,7 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 **Claim work:**
 - "Scan this claim for UnitedHealthcare. CPT 97153, 97155. Diagnosis F84.0. POS 11."
 - "Can I bill 97153 and 97155 together on the same claim?"
-- "Score this prior auth before I submit. Auth ID 441-B."
+- "Check prior-auth readiness for Aetna CPT 97153 before I submit."
 
 **Denial work:**
 - "What does denial code 97 mean and how do I fix it?"
@@ -262,7 +264,7 @@ Product: [upstream.cx](https://upstream.cx) · [Newsletter](https://upstream.cx/
 
 ---
 
-Built by [Upstream Intelligence](https://upstream.cx). Read the methodology at [engine.upstream.cx](https://engine.upstream.cx). Pioneer Program: [upstream.cx/pioneer](https://upstream.cx/pioneer).
+Built by [Upstream Intelligence](https://upstream.cx). Pioneer Program: [upstream.cx/pioneer](https://upstream.cx/pioneer).
 
 <div align="center">
 

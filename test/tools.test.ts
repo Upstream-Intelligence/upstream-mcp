@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { UpstreamAPIClient } from '../src/client.js';
 import { UpstreamAPIError } from '../src/errors.js';
 import { checkNcciEdits } from '../src/tools/check_ncci_edits.js';
+import { checkPriorAuthReadiness } from '../src/tools/check_prior_auth_readiness.js';
 import {
   compileSyntheticScenarioDsl,
   getSyntheticPackAdjudicationTraceSummary,
@@ -307,5 +308,140 @@ describe('synthetic data tools', () => {
     expect(descriptions.join('\n')).not.toContain('de-identified');
     expect(descriptions.join('\n')).toContain('not as proof of observed real payer frequencies');
     expect(descriptions.join('\n')).not.toMatch(/\bis real payer truth\b/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// checkPriorAuthReadiness tool (D2 contract)
+// ---------------------------------------------------------------------------
+
+describe('checkPriorAuthReadiness.execute', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('calls GET /data/v1/prior-auth-readiness/ with payer and cpt query params', async () => {
+    const mockFetch = makeFetchMock(200, {
+      coverage_state: 'active',
+      prior_auth_required: true,
+      readiness_state: 'ready_when_assembled',
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    process.env['UPSTREAM_API_KEY'] = 'sk_test_key';
+
+    const apiClient = new UpstreamAPIClient();
+    const result = await checkPriorAuthReadiness.execute(apiClient, { payer: 'Aetna', cpt: '97153' });
+
+    expect(result).toEqual({
+      coverage_state: 'active',
+      prior_auth_required: true,
+      readiness_state: 'ready_when_assembled',
+    });
+
+    const [calledUrl, calledInit] = mockFetch.mock.calls[0] as [URL, RequestInit & { headers: Record<string, string> }];
+    expect(calledUrl.pathname).toBe('/data/v1/prior-auth-readiness/');
+    expect(calledUrl.searchParams.get('payer')).toBe('Aetna');
+    expect(calledUrl.searchParams.get('cpt')).toBe('97153');
+    expect(calledInit.headers['X-API-Key']).toBe('sk_test_key');
+  });
+
+  it('sends optional line_of_business and conditions when provided', async () => {
+    const mockFetch = makeFetchMock(200, { readiness_state: 'no_prior_auth_required' });
+    vi.stubGlobal('fetch', mockFetch);
+
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    process.env['UPSTREAM_API_KEY'] = 'sk_test_key';
+
+    const apiClient = new UpstreamAPIClient();
+    await checkPriorAuthReadiness.execute(apiClient, {
+      payer: 'UHC',
+      cpt: '97155',
+      line_of_business: 'commercial',
+      conditions: 'F84.0,F84.5',
+    });
+
+    const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
+    expect(calledUrl.searchParams.get('line_of_business')).toBe('commercial');
+    expect(calledUrl.searchParams.get('conditions')).toBe('F84.0,F84.5');
+  });
+
+  it('does NOT send line_of_business or conditions when omitted', async () => {
+    const mockFetch = makeFetchMock(200, { readiness_state: 'ready_when_assembled' });
+    vi.stubGlobal('fetch', mockFetch);
+
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    process.env['UPSTREAM_API_KEY'] = 'sk_test_key';
+
+    const apiClient = new UpstreamAPIClient();
+    await checkPriorAuthReadiness.execute(apiClient, { payer: 'Cigna', cpt: '97153' });
+
+    const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
+    expect(calledUrl.searchParams.has('line_of_business')).toBe(false);
+    expect(calledUrl.searchParams.has('conditions')).toBe(false);
+  });
+
+  it('returns readiness_state unknown verbatim (HTTP 200, not thrown, not remapped)', async () => {
+    const unknownBody = { readiness_state: 'unknown', coverage_state: 'active', prior_auth_required: null };
+    const mockFetch = makeFetchMock(200, unknownBody);
+    vi.stubGlobal('fetch', mockFetch);
+
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    process.env['UPSTREAM_API_KEY'] = 'sk_test_key';
+
+    const apiClient = new UpstreamAPIClient();
+    const result = await checkPriorAuthReadiness.execute(apiClient, { payer: 'Anthem', cpt: '97153' });
+
+    expect(result).toEqual(unknownBody);
+  });
+
+  it('rejects with UpstreamAPIError statusCode 404 on not-found response', async () => {
+    const mockFetch = makeFetchMock(404, { detail: 'Not found' });
+    vi.stubGlobal('fetch', mockFetch);
+
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    process.env['UPSTREAM_API_KEY'] = 'sk_test_key';
+
+    const apiClient = new UpstreamAPIClient();
+    try {
+      await checkPriorAuthReadiness.execute(apiClient, { payer: 'Aetna', cpt: '97153' });
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      expect((err as UpstreamAPIError).statusCode).toBe(404);
+    }
+  });
+
+  it('rejects with UpstreamAPIError statusCode 401 on unauthorized response', async () => {
+    const mockFetch = makeFetchMock(401, { detail: 'Unauthorized' });
+    vi.stubGlobal('fetch', mockFetch);
+
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    process.env['UPSTREAM_API_KEY'] = 'sk_test_key';
+
+    const apiClient = new UpstreamAPIClient();
+    try {
+      await checkPriorAuthReadiness.execute(apiClient, { payer: 'Aetna', cpt: '97153' });
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      expect((err as UpstreamAPIError).statusCode).toBe(401);
+    }
+  });
+
+  it('rejects with UpstreamAPIError statusCode 400 on bad request response', async () => {
+    const mockFetch = makeFetchMock(400, { detail: 'payer is required' });
+    vi.stubGlobal('fetch', mockFetch);
+
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    process.env['UPSTREAM_API_KEY'] = 'sk_test_key';
+
+    const apiClient = new UpstreamAPIClient();
+    try {
+      await checkPriorAuthReadiness.execute(apiClient, { payer: '', cpt: '97153' });
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      expect((err as UpstreamAPIError).statusCode).toBe(400);
+    }
   });
 });

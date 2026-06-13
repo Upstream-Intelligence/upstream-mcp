@@ -1,0 +1,8 @@
+{
+  "workflow": {
+    "mode": "yolo",
+    "planning_depth": "standard",
+    "parallel_execution": true,
+    "_auto_chain_active": false
+  }
+}

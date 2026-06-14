@@ -117,7 +117,7 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 |---|---|---|
 | `lookup_fee_schedule` | `[Free]` | CMS national fee schedule rates for any CPT code. Returns facility and non facility rates, RVUs, and geographic adjusters. |
 
-### Specialty workflows
+### Workflows by practice type
 
 | Tool | Tier | What it does |
 |---|---|---|
@@ -148,7 +148,7 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 - "What is the Medicare rate for CPT 97153?"
 - "Show me RVUs for 97155 facility versus non facility."
 
-**Specialty workflows:**
+**Workflows by practice type:**
 - "Check authorization status for patient ref UP-4492."
 - "What is the collectibility score for patient ref UP-8831?"
 

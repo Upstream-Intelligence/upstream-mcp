@@ -53,7 +53,7 @@ Initial public release from `Upstream-Intelligence/upstream` monorepo.
   components.
 - `payer_scorecard` — public Payer Behavior Scorecard with denial rate,
   days-to-pay, overturn rate, top denial reasons.
-- `list_payer_scorecards` — list every tracked payer, filterable by vertical
+- `list_payer_scorecards` — list every tracked payer, filterable by specialty
   (ABA, SNF, PT/OT, dental, etc.).
 - `compare_payers` — side-by-side comparison of 2-5 payers (replaced in 0.2.0
   by `compare_practice_to_community` — see 0.2.0 notes).

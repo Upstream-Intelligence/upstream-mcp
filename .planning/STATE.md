@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: phase-1-canon-anchor
 milestone_name: canon-anchor
 status: initialized
-last_updated: "2026-06-12T00:00:00-05:00"
-last_activity: 2026-06-12
+last_updated: "2026-06-13T22:00:00-05:00"
+last_activity: 2026-06-13
 progress:
   total_phases: 3
   completed_phases: 0
@@ -34,9 +34,20 @@ feat / `d12a1f4` wording): `check_prior_auth_readiness` rewired off the phantom
 the contract incl. the `unknown` verbatim passthrough and 400/401/404 propagation;
 README/package on Workflow Bridge framing; Upstream Data referenced generically.
 
-This repo is NON-DEPLOYING. The tool becomes functional end-to-end only after the
-root-controlled milestone-end Cloud Run deploy puts the endpoint live.
+This repo is NON-DEPLOYING. The milestone SHIPPED: PR #27 merged to v2 `main`
+(`5774fa4`), backend `upstream-v2-api-00048-srd` live, `/data/v1/prior-auth-readiness/`
+live (404 -> 401), so this tool is functional end-to-end.
 
-**Root-controlled next move:** advisor gate -> merge PR #27 -> one Cloud Run deploy
--> post-deploy live-HTTP verify. See `../.planning/STATE.md`. Deferred follow-on:
-migrate the legacy `/api/v1/data/*` synthetic_data tools to `UpstreamDataClient`.
+## Status (2026-06-13, Phase 4 - No-Packs Framing Convergence)
+
+Category A DONE + pushed (`chore: drop pack/vertical platform framing + add
+legacy-identifier canon guard`): CHANGELOG "filterable by vertical" -> "specialty";
+README "Specialty workflows" -> "Workflows by practice type"; added vitest
+`test/canon.test.ts` (bans the nine legacy identifiers, proven able to FAIL,
+CI-enforced via the reusable-ci `npm test` step). `npm test` 21 passed, `tsc` clean.
+
+**Deferred (Category B, blocked):** the synthetic-data product surface (18
+`get_synthetic_pack_*` tools + `pack_id` + the legacy `/api/v1/data/*` calls)
+migrates to the new dataset-oriented contract once upstream-data lands its de-pack
+plus the v2 `/api/v1/data/*` -> `/data/v1/*` migration. It is a re-derivation, not a
+rename. Root-controlled. See `../.planning/phases/04-no-packs-framing-convergence/`.

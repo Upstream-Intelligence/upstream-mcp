@@ -46,11 +46,9 @@ README "Specialty workflows" -> "Workflows by practice type"; added vitest
 `test/canon.test.ts` (bans the nine legacy identifiers, proven able to FAIL,
 CI-enforced via the reusable-ci `npm test` step). `npm test` 21 passed, `tsc` clean.
 
-**Deferred (Category B, blocked):** the synthetic-data product surface (18
-`get_synthetic_pack_*` tools + `pack_id` + the legacy `/api/v1/data/*` calls)
-migrates to the new dataset-oriented contract once upstream-data lands its de-pack
-plus the v2 `/api/v1/data/*` -> `/data/v1/*` migration. It is a re-derivation, not a
-rename. Root-controlled. See `../.planning/phases/04-no-packs-framing-convergence/`.
+**Category B: RESOLVED 2026-06-14** (was deferred/blocked). The synthetic-data
+product surface re-derived to the dataset catalog; details in the 2026-06-14 status
+section below. See `../.planning/phases/04-no-packs-framing-convergence/04-B-SUMMARY.md`.
 
 ## Status (2026-06-14, security hardening shipped out-of-band + Cat B unblocked)
 

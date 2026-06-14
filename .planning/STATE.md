@@ -51,3 +51,22 @@ CI-enforced via the reusable-ci `npm test` step). `npm test` 21 passed, `tsc` cl
 migrates to the new dataset-oriented contract once upstream-data lands its de-pack
 plus the v2 `/api/v1/data/*` -> `/data/v1/*` migration. It is a re-derivation, not a
 rename. Root-controlled. See `../.planning/phases/04-no-packs-framing-convergence/`.
+
+## Status (2026-06-14, security hardening shipped out-of-band + Cat B unblocked)
+
+Two updates recorded by the root control plane (see `../.planning/STATE.md` ->
+"Drift Reconciliation + Cat B Unblock (2026-06-14)").
+
+- **Contract Hardening (most of Phase 3 / MCP-06) shipped AHEAD of its plan** as
+  part of a cross-repo security burn-down: `client.ts` hardened (base-URL
+  https/localhost validation, `AbortSignal.timeout` -> 504, 5xx body sanitized, 4xx
+  capped, empty-key stderr warn, 429 preserved); `encodeURIComponent` on path args
+  (`lookup_denial_code`, `lookup_fee_schedule`, synthetic tools);
+  `get_denial_clusters` query fix; `npm audit fix` (0 CVEs); +34 tests. Phase 3
+  ROADMAP status is reconciled when the phase is formally closed.
+- **Category B is now UNBLOCKED.** upstream-data v3.40 is live on Railway
+  (`https://upstream-data-production.up.railway.app`). The synthetic-data MCP
+  surface re-derives against `/api/v1/data/catalog/{slug}/*` on that host via a
+  SECOND client (`UPSTREAM_DATA_SERVICE_URL` + `UPSTREAM_DATA_API_KEY`, separate
+  from the v2 `sk_`/`api.upstream.cx` client), pruning 14 tools -> 6. Plan:
+  `../.planning/phases/04-no-packs-framing-convergence/04-B-PLAN-synthetic-data-redrive.md`.

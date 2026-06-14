@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { UpstreamAPIClient } from '../src/client.js';
+import { UpstreamAPIClient, UPSTREAM_DATA_CONFIG } from '../src/client.js';
 import { UpstreamAPIError } from '../src/errors.js';
 import { checkNcciEdits } from '../src/tools/check_ncci_edits.js';
 import { checkPriorAuthReadiness } from '../src/tools/check_prior_auth_readiness.js';
@@ -7,21 +7,12 @@ import { lookupDenialCode } from '../src/tools/lookup_denial_code.js';
 import { lookupFeeSchedule } from '../src/tools/lookup_fee_schedule.js';
 import { getDenialClusters } from '../src/tools/get_denial_clusters.js';
 import {
-  compileSyntheticScenarioDsl,
-  getSyntheticPackAdjudicationTraceSummary,
-  getSyntheticPackContractFeeSchedule,
-  getSyntheticPackEpisodeManifest,
-  getSyntheticPackEvaluationManifest,
-  getSyntheticPackPayerContractSimulation,
-  getSyntheticPackPayerPolicySummary,
-  getSyntheticPackReadiness,
-  getSyntheticPackRealism,
-  getSyntheticPackScenarios,
-  getSyntheticPackSchema,
-  getSyntheticPackSources,
-  getSyntheticPackTransactionSurfaceManifest,
-  getSyntheticPackWorldManifest,
-  listSyntheticDataPacks,
+  getDatasetReadiness,
+  getDatasetRealism,
+  getDatasetScenarios,
+  getDatasetSchema,
+  getDatasetSources,
+  listDatasets,
 } from '../src/tools/synthetic_data.js';
 
 // ---------------------------------------------------------------------------
@@ -242,6 +233,78 @@ describe('UpstreamAPIClient', () => {
 });
 
 // ---------------------------------------------------------------------------
+// UpstreamAPIClient configured for the Upstream Data synthetic service
+// (separate host + key from the platform API; data.upstream.cx is marketing)
+// ---------------------------------------------------------------------------
+
+describe('UpstreamAPIClient (Upstream Data service config)', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    delete process.env['UPSTREAM_DATA_SERVICE_URL'];
+    delete process.env['UPSTREAM_DATA_API_KEY'];
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    vi.restoreAllMocks();
+  });
+
+  it('defaults to the upstream-data Railway host and sends UPSTREAM_DATA_API_KEY', async () => {
+    process.env['UPSTREAM_DATA_API_KEY'] = 'data_key_xyz';
+    const mockFetch = makeFetchMock(200, { synthetic_only: true });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const dataClient = new UpstreamAPIClient(UPSTREAM_DATA_CONFIG);
+    await dataClient.get('/api/v1/data/catalog/');
+
+    const [calledUrl, calledInit] = mockFetch.mock.calls[0] as [URL, RequestInit & { headers: Record<string, string> }];
+    expect(calledUrl.toString()).toBe('https://upstream-data-production.up.railway.app/api/v1/data/catalog/');
+    expect(calledInit.headers['X-API-Key']).toBe('data_key_xyz');
+  });
+
+  it('does not read the platform UPSTREAM_API_KEY for the data service', async () => {
+    process.env['UPSTREAM_API_KEY'] = 'platform_sk_key'; // must NOT leak onto the data service
+    const mockFetch = makeFetchMock(200, { synthetic_only: true });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const dataClient = new UpstreamAPIClient(UPSTREAM_DATA_CONFIG);
+    await dataClient.get('/api/v1/data/catalog/');
+
+    const [, calledInit] = mockFetch.mock.calls[0] as [URL, RequestInit & { headers: Record<string, string> }];
+    expect(calledInit.headers['X-API-Key']).toBeUndefined();
+  });
+
+  it('honors a localhost UPSTREAM_DATA_SERVICE_URL override for dev', () => {
+    process.env['UPSTREAM_DATA_SERVICE_URL'] = 'http://localhost:9000';
+    expect(() => new UpstreamAPIClient(UPSTREAM_DATA_CONFIG)).not.toThrow();
+  });
+
+  it('rejects a non-localhost http data service URL', () => {
+    process.env['UPSTREAM_DATA_SERVICE_URL'] = 'http://evil.example.com';
+    expect(() => new UpstreamAPIClient(UPSTREAM_DATA_CONFIG)).toThrow();
+  });
+
+  it('returns a generic 5xx message labeled for the data service, no body leak', async () => {
+    process.env['UPSTREAM_DATA_API_KEY'] = 'data_key';
+    const mockFetch = makeFetchMock(500, { detail: 'boom internal traceback' });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const dataClient = new UpstreamAPIClient(UPSTREAM_DATA_CONFIG);
+    try {
+      await dataClient.get('/api/v1/data/catalog/aba/schema/');
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      expect((err as UpstreamAPIError).message).toBe('Upstream Data error (HTTP 500)');
+      expect((err as UpstreamAPIError).message).not.toContain('boom');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
 // checkNcciEdits tool
 // ---------------------------------------------------------------------------
 
@@ -355,123 +418,114 @@ describe('UpstreamAPIError', () => {
 // Synthetic data tools
 // ---------------------------------------------------------------------------
 
-describe('synthetic data tools', () => {
+describe('synthetic data (dataset catalog) tools', () => {
+  beforeEach(() => {
+    process.env = { ...process.env };
+    process.env['UPSTREAM_DATA_API_KEY'] = 'data_key';
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
   afterEach(() => vi.restoreAllMocks());
 
-  it('calls backend data catalog without embedding dataset rows', async () => {
+  function dataClient() {
+    return new UpstreamAPIClient(UPSTREAM_DATA_CONFIG);
+  }
+
+  it('list_datasets calls the live data-service catalog without embedding rows', async () => {
     const mockFetch = makeFetchMock(200, {
       synthetic_only: true,
       catalog: { listing_count: 20, listings: [] },
     });
     vi.stubGlobal('fetch', mockFetch);
 
-    const apiClient = new UpstreamAPIClient();
-    const result = await listSyntheticDataPacks.execute(apiClient);
+    const result = await listDatasets.execute(dataClient());
 
     expect(result).toEqual({
       synthetic_only: true,
       catalog: { listing_count: 20, listings: [] },
     });
     const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
-    expect(calledUrl.pathname).toBe('/api/v1/data/catalog/');
+    expect(calledUrl.toString()).toBe(
+      'https://upstream-data-production.up.railway.app/api/v1/data/catalog/',
+    );
   });
 
-  it('routes pack-specific synthetic data tools to metadata endpoints', async () => {
+  it('routes each dataset detail tool to /api/v1/data/catalog/{slug}/{suffix}', async () => {
     const mockFetch = makeFetchMock(200, { synthetic_only: true, no_phi: true });
     vi.stubGlobal('fetch', mockFetch);
 
-    const apiClient = new UpstreamAPIClient();
-    await getSyntheticPackSchema.execute(apiClient, { pack_id: 'aba' });
-    await getSyntheticPackSources.execute(apiClient, { pack_id: 'aba' });
-    await getSyntheticPackScenarios.execute(apiClient, { pack_id: 'aba' });
-    await getSyntheticPackReadiness.execute(apiClient, { pack_id: 'aba' });
+    const c = dataClient();
+    await getDatasetSchema.execute(c, { dataset_id: 'aba' });
+    await getDatasetSources.execute(c, { dataset_id: 'aba' });
+    await getDatasetScenarios.execute(c, { dataset_id: 'aba' });
+    await getDatasetRealism.execute(c, { dataset_id: 'aba' });
+    await getDatasetReadiness.execute(c, { dataset_id: 'aba' });
 
     const paths = mockFetch.mock.calls.map(([url]) => (url as URL).pathname);
     expect(paths).toEqual([
-      '/api/v1/data/packs/aba/schema/',
-      '/api/v1/data/packs/aba/sources/',
-      '/api/v1/data/packs/aba/scenarios/',
-      '/api/v1/data/packs/aba/readiness/',
+      '/api/v1/data/catalog/aba/schema/',
+      '/api/v1/data/catalog/aba/sources/',
+      '/api/v1/data/catalog/aba/scenarios/',
+      '/api/v1/data/catalog/aba/realism/',
+      '/api/v1/data/catalog/aba/readiness/',
     ]);
   });
 
-  it('routes every expanded synthetic data tool to its semantically matching backend endpoint', async () => {
-    const mockFetch = makeFetchMock(200, { synthetic_only: true, no_phi: true });
+  it('encodes the dataset_id slug so it cannot traverse the path', async () => {
+    const mockFetch = makeFetchMock(200, { ok: true });
     vi.stubGlobal('fetch', mockFetch);
 
-    const apiClient = new UpstreamAPIClient();
-    const args = { pack_id: 'aba' };
-    await listSyntheticDataPacks.execute(apiClient);
-    await getSyntheticPackSchema.execute(apiClient, args);
-    await getSyntheticPackSources.execute(apiClient, args);
-    await getSyntheticPackScenarios.execute(apiClient, args);
-    await getSyntheticPackReadiness.execute(apiClient, args);
-    await getSyntheticPackWorldManifest.execute(apiClient, args);
-    await getSyntheticPackEpisodeManifest.execute(apiClient, args);
-    await getSyntheticPackPayerPolicySummary.execute(apiClient, args);
-    await getSyntheticPackContractFeeSchedule.execute(apiClient, args);
-    await getSyntheticPackPayerContractSimulation.execute(apiClient, args);
-    await getSyntheticPackEvaluationManifest.execute(apiClient, args);
-    await getSyntheticPackAdjudicationTraceSummary.execute(apiClient, args);
-    await getSyntheticPackTransactionSurfaceManifest.execute(apiClient, args);
-    await getSyntheticPackRealism.execute(apiClient, args);
-    await compileSyntheticScenarioDsl.execute(apiClient, {
-      pack_id: 'aba',
-      scenario_type: 'authorization-surge',
-    });
+    await getDatasetSchema.execute(dataClient(), { dataset_id: '../admin/x' });
 
-    const calls = mockFetch.mock.calls.map(([url, init]) => ({
-      method: (init as RequestInit).method,
-      path: (url as URL).pathname,
-      body: (init as RequestInit).body,
-    }));
-    expect(calls).toEqual([
-      { method: 'GET', path: '/api/v1/data/catalog/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/schema/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/sources/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/scenarios/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/readiness/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/world/manifest/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/episodes/manifest/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/payer-policy/summary/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/contracts/fee-schedule/summary/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/payer-contract-simulator/report/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/evaluation/manifest/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/adjudication-trace/summary/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/transaction-surface/manifest/', body: undefined },
-      { method: 'GET', path: '/api/v1/data/packs/aba/realism/', body: undefined },
-      {
-        method: 'POST',
-        path: '/api/v1/data/scenario-dsl/compile/',
-        body: JSON.stringify({ pack_id: 'aba', scenario_type: 'authorization-surge' }),
-      },
-    ]);
+    const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
+    expect(calledUrl.pathname).toBe('/api/v1/data/catalog/..%2Fadmin%2Fx/schema/');
+    expect(calledUrl.pathname).not.toContain('/admin/');
   });
 
-  it('documents synthetic-only and no-PHI boundaries in tool descriptions', () => {
-    const descriptions = [
-      listSyntheticDataPacks,
-      getSyntheticPackSchema,
-      getSyntheticPackSources,
-      getSyntheticPackScenarios,
-      getSyntheticPackReadiness,
-      getSyntheticPackWorldManifest,
-      getSyntheticPackEpisodeManifest,
-      getSyntheticPackPayerPolicySummary,
-      getSyntheticPackContractFeeSchedule,
-      getSyntheticPackPayerContractSimulation,
-      getSyntheticPackEvaluationManifest,
-      getSyntheticPackAdjudicationTraceSummary,
-      getSyntheticPackTransactionSurfaceManifest,
-      getSyntheticPackRealism,
-      compileSyntheticScenarioDsl,
-    ].map((tool) => tool.description.toLowerCase());
+  it('propagates a 401 on a paid detail tool when no data key is set', async () => {
+    delete process.env['UPSTREAM_DATA_API_KEY'];
+    const mockFetch = makeFetchMock(401, { detail: 'API key required' });
+    vi.stubGlobal('fetch', mockFetch);
 
-    expect(descriptions.join('\n')).toContain('synthetic');
-    expect(descriptions.join('\n')).toContain('phi');
-    expect(descriptions.join('\n')).not.toContain('de-identified');
-    expect(descriptions.join('\n')).toContain('not as proof of observed real payer frequencies');
-    expect(descriptions.join('\n')).not.toMatch(/\bis real payer truth\b/);
+    try {
+      await getDatasetSources.execute(dataClient(), { dataset_id: 'aba' });
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      expect((err as UpstreamAPIError).statusCode).toBe(401);
+    }
+  });
+
+  it('marks every dataset tool for the data service, not the platform API', () => {
+    for (const tool of [
+      listDatasets,
+      getDatasetSchema,
+      getDatasetSources,
+      getDatasetScenarios,
+      getDatasetRealism,
+      getDatasetReadiness,
+    ]) {
+      expect(tool.service).toBe('data');
+    }
+  });
+
+  it('documents synthetic-only and no-PHI boundaries with no pack vocabulary', () => {
+    const blob = [
+      listDatasets,
+      getDatasetSchema,
+      getDatasetSources,
+      getDatasetScenarios,
+      getDatasetRealism,
+      getDatasetReadiness,
+    ]
+      .map((tool) => `${tool.name} ${tool.description}`)
+      .join('\n')
+      .toLowerCase();
+
+    expect(blob).toContain('synthetic');
+    expect(blob).toContain('phi');
+    expect(blob).not.toContain('de-identified');
+    expect(blob).not.toContain('pack');
+    expect(blob).toContain('not as proof of observed real payer frequencies');
   });
 });
 

@@ -6,7 +6,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-import { UpstreamAPIClient } from './client.js';
+import { UpstreamAPIClient, UPSTREAM_DATA_CONFIG } from './client.js';
 import { UpstreamAPIError } from './errors.js';
 import { checkNcciEdits } from './tools/check_ncci_edits.js';
 import { lookupDenialCode } from './tools/lookup_denial_code.js';
@@ -24,21 +24,12 @@ import { getPatientPropensity } from './tools/get_patient_propensity.js';
 import { queryDentalFeeSchedule } from './tools/query_dental_fee_schedule.js';
 import { scoreDentalClaimDenialRisk } from './tools/score_dental_claim_denial_risk.js';
 import {
-  compileSyntheticScenarioDsl,
-  getSyntheticPackAdjudicationTraceSummary,
-  getSyntheticPackContractFeeSchedule,
-  getSyntheticPackEpisodeManifest,
-  getSyntheticPackEvaluationManifest,
-  getSyntheticPackPayerContractSimulation,
-  getSyntheticPackPayerPolicySummary,
-  getSyntheticPackReadiness,
-  getSyntheticPackRealism,
-  getSyntheticPackScenarios,
-  getSyntheticPackSchema,
-  getSyntheticPackSources,
-  getSyntheticPackTransactionSurfaceManifest,
-  getSyntheticPackWorldManifest,
-  listSyntheticDataPacks,
+  getDatasetReadiness,
+  getDatasetRealism,
+  getDatasetScenarios,
+  getDatasetSchema,
+  getDatasetSources,
+  listDatasets,
 } from './tools/synthetic_data.js';
 import { getDentalPayerDrift } from './tools/get_dental_payer_drift.js';
 
@@ -59,21 +50,12 @@ const tools = [
   queryDentalFeeSchedule,
   scoreDentalClaimDenialRisk,
   getDentalPayerDrift,
-  listSyntheticDataPacks,
-  getSyntheticPackSchema,
-  getSyntheticPackSources,
-  getSyntheticPackScenarios,
-  getSyntheticPackReadiness,
-  getSyntheticPackWorldManifest,
-  getSyntheticPackEpisodeManifest,
-  getSyntheticPackPayerPolicySummary,
-  getSyntheticPackContractFeeSchedule,
-  getSyntheticPackPayerContractSimulation,
-  getSyntheticPackEvaluationManifest,
-  getSyntheticPackAdjudicationTraceSummary,
-  getSyntheticPackTransactionSurfaceManifest,
-  getSyntheticPackRealism,
-  compileSyntheticScenarioDsl,
+  listDatasets,
+  getDatasetSchema,
+  getDatasetSources,
+  getDatasetScenarios,
+  getDatasetRealism,
+  getDatasetReadiness,
 ];
 
 const server = new Server(
@@ -81,7 +63,11 @@ const server = new Server(
   { capabilities: { tools: {} } },
 );
 
+// Two services, one hardened transport: the platform API (denial codes, fee schedules,
+// prior-auth readiness) and the Upstream Data synthetic-claims service (a separate host + key).
+// Tools marked `service: 'data'` dispatch to the data-service client.
 const client = new UpstreamAPIClient();
+const dataClient = new UpstreamAPIClient(UPSTREAM_DATA_CONFIG);
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: tools.map((t) => ({
@@ -102,7 +88,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await (tool as any).execute(client, request.params.arguments ?? {});
+    const selected = (tool as any).service === 'data' ? dataClient : client;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await (tool as any).execute(selected, request.params.arguments ?? {});
     return {
       content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
     };

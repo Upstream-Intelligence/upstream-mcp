@@ -17,6 +17,6 @@ export const lookupFeeSchedule = {
     required: ['cpt'],
   },
   async execute(client: UpstreamAPIClient, args: { cpt: string }) {
-    return client.get(`/api/v1/public/fee-schedule/${args.cpt}/`);
+    return client.get(`/api/v1/public/fee-schedule/${encodeURIComponent(args.cpt)}/`);
   },
 };

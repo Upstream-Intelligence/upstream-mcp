@@ -3,3 +3,6 @@ dist/
 .env
 *.js.map
 graphify-out/
+
+# Compound Engineering local config
+.compound-engineering/*.local.yaml

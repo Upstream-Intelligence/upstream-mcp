@@ -17,6 +17,6 @@ export const getDenialClusters = {
   },
   async execute(client: UpstreamAPIClient, args: { lookback_days?: number }) {
     const lookback = args.lookback_days ?? 30;
-    return client.get(`/api/v1/denial-clusters/?lookback_days=${lookback}`);
+    return client.get('/api/v1/denial-clusters/', { lookback_days: String(lookback) });
   },
 };

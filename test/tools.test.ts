@@ -3,6 +3,9 @@ import { UpstreamAPIClient } from '../src/client.js';
 import { UpstreamAPIError } from '../src/errors.js';
 import { checkNcciEdits } from '../src/tools/check_ncci_edits.js';
 import { checkPriorAuthReadiness } from '../src/tools/check_prior_auth_readiness.js';
+import { lookupDenialCode } from '../src/tools/lookup_denial_code.js';
+import { lookupFeeSchedule } from '../src/tools/lookup_fee_schedule.js';
+import { getDenialClusters } from '../src/tools/get_denial_clusters.js';
 import {
   compileSyntheticScenarioDsl,
   getSyntheticPackAdjudicationTraceSummary,
@@ -145,6 +148,97 @@ describe('UpstreamAPIClient', () => {
     expect(calledInit.method).toBe('POST');
     expect(calledInit.body).toBe(JSON.stringify(payload));
   });
+
+  it('passes an AbortSignal on every request for timeout enforcement', async () => {
+    const mockFetch = makeFetchMock(200, { ok: true });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    await apiClient.get('/api/v1/public/carc/97/');
+
+    const [, calledInit] = mockFetch.mock.calls[0] as [URL, RequestInit];
+    expect(calledInit.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('throws a 504 UpstreamAPIError with a timeout message when the request aborts', async () => {
+    const mockFetch = vi.fn().mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    try {
+      await apiClient.get('/api/v1/public/carc/97/');
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      const apiError = err as UpstreamAPIError;
+      expect(apiError.statusCode).toBe(504);
+      expect(apiError.message.toLowerCase()).toContain('timed out');
+    }
+  });
+
+  it('returns a generic message on 5xx without leaking the server body', async () => {
+    const leakyBody = { detail: 'Traceback: /app/secret/internal.py line 42 boom' };
+    const mockFetch = makeFetchMock(500, leakyBody);
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    try {
+      await apiClient.get('/api/v1/public/carc/97/');
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      const apiError = err as UpstreamAPIError;
+      expect(apiError.statusCode).toBe(500);
+      expect(apiError.message).toBe('Upstream API error (HTTP 500)');
+      expect(apiError.message).not.toContain('Traceback');
+      expect(apiError.message).not.toContain('internal.py');
+    }
+  });
+
+  it('still surfaces the server body on 4xx for structured client errors', async () => {
+    const mockFetch = makeFetchMock(400, { detail: 'cpt is required' });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    try {
+      await apiClient.get('/api/v1/public/carc/97/');
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      const apiError = err as UpstreamAPIError;
+      expect(apiError.statusCode).toBe(400);
+      expect(apiError.message).toContain('cpt is required');
+    }
+  });
+
+  it('rejects construction when UPSTREAM_BASE_URL uses an unsupported protocol', () => {
+    process.env['UPSTREAM_BASE_URL'] = 'ftp://x';
+    expect(() => new UpstreamAPIClient()).toThrow();
+  });
+
+  it('rejects construction for non-localhost http base URLs', () => {
+    process.env['UPSTREAM_BASE_URL'] = 'http://evil.example.com';
+    expect(() => new UpstreamAPIClient()).toThrow();
+  });
+
+  it('accepts the https default base URL', () => {
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    expect(() => new UpstreamAPIClient()).not.toThrow();
+  });
+
+  it('accepts http for localhost dev', () => {
+    process.env['UPSTREAM_BASE_URL'] = 'http://localhost:8000';
+    expect(() => new UpstreamAPIClient()).not.toThrow();
+  });
+
+  it('warns on stderr when constructed without an API key', () => {
+    delete process.env['UPSTREAM_API_KEY'];
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    new UpstreamAPIClient();
+
+    expect(errSpy).toHaveBeenCalledOnce();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -170,6 +264,76 @@ describe('checkNcciEdits.execute', () => {
     expect(calledUrl.pathname).toBe('/api/v1/public/ncci/check/');
     expect(calledUrl.searchParams.get('cpt_a')).toBe('97153');
     expect(calledUrl.searchParams.get('cpt_b')).toBe('97155');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Path-arg encoding (injection / traversal hardening)
+// ---------------------------------------------------------------------------
+
+describe('path-arg encoding', () => {
+  beforeEach(() => {
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    process.env['UPSTREAM_API_KEY'] = 'test_key';
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it('encodes a CARC code containing a slash so it cannot traverse the path', async () => {
+    const mockFetch = makeFetchMock(200, { ok: true });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    await lookupDenialCode.execute(apiClient, { code: '../admin/97' });
+
+    const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
+    expect(calledUrl.pathname).toBe('/api/v1/public/carc/..%2Fadmin%2F97/');
+    expect(calledUrl.pathname).not.toContain('/admin/');
+  });
+
+  it('encodes a CPT code containing a space', async () => {
+    const mockFetch = makeFetchMock(200, { ok: true });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    await lookupFeeSchedule.execute(apiClient, { cpt: '97 153' });
+
+    const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
+    expect(calledUrl.pathname).toBe('/api/v1/public/fee-schedule/97%20153/');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// get_denial_clusters (lookback as query param, not raw path interpolation)
+// ---------------------------------------------------------------------------
+
+describe('getDenialClusters.execute', () => {
+  beforeEach(() => {
+    process.env['UPSTREAM_BASE_URL'] = 'https://api.upstream.cx';
+    process.env['UPSTREAM_API_KEY'] = 'test_key';
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it('sends lookback_days as an encoded query param, not raw path interpolation', async () => {
+    const mockFetch = makeFetchMock(200, { clusters: [] });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    await getDenialClusters.execute(apiClient, { lookback_days: 90 });
+
+    const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
+    expect(calledUrl.pathname).toBe('/api/v1/denial-clusters/');
+    expect(calledUrl.searchParams.get('lookback_days')).toBe('90');
+  });
+
+  it('defaults lookback_days to 30 when omitted', async () => {
+    const mockFetch = makeFetchMock(200, { clusters: [] });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const apiClient = new UpstreamAPIClient();
+    await getDenialClusters.execute(apiClient, {});
+
+    const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
+    expect(calledUrl.searchParams.get('lookback_days')).toBe('30');
   });
 });
 

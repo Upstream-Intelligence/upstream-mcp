@@ -17,6 +17,6 @@ export const lookupDenialCode = {
     required: ['code'],
   },
   async execute(client: UpstreamAPIClient, args: { code: string }) {
-    return client.get(`/api/v1/public/carc/${args.code}/`);
+    return client.get(`/api/v1/public/carc/${encodeURIComponent(args.code)}/`);
   },
 };

@@ -117,6 +117,14 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 |---|---|---|
 | `lookup_fee_schedule` | `[Free]` | CMS national fee schedule rates for any CPT code. Returns facility and non facility rates, RVUs, and geographic adjusters. |
 
+### Benchmark leaderboard
+
+| Tool | Tier | What it does |
+|---|---|---|
+| `get_benchmark_leaderboard` | `[Free]` | Get the latest RCM Arena benchmark leaderboard with model rankings across all RCM specialties. Returns rank, model name, overall accuracy, F1 score, and cost per run. |
+| `get_model_scores` | `[Free]` | Get per-specialty benchmark scores for a specific model (or all models if model_id omitted). Returns accuracy, F1, precision, and recall per RCM specialty. |
+| `get_benchmark_history` | `[Free]` | Get the history of all past RCM Arena benchmark runs. Returns run_id, date, top model, and top accuracy for each run. |
+
 ### Workflows by practice type
 
 | Tool | Tier | What it does |

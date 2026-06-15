@@ -32,6 +32,7 @@ import {
   listDatasets,
 } from './tools/synthetic_data.js';
 import { getDentalPayerDrift } from './tools/get_dental_payer_drift.js';
+import { getBenchmarkHistory, getBenchmarkLeaderboard, getModelScores } from './tools/benchmark.js';
 
 const tools = [
   checkNcciEdits,
@@ -56,6 +57,9 @@ const tools = [
   getDatasetScenarios,
   getDatasetRealism,
   getDatasetReadiness,
+  getBenchmarkLeaderboard,
+  getModelScores,
+  getBenchmarkHistory,
 ];
 
 const server = new Server(

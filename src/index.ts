@@ -34,7 +34,16 @@ import {
 import { getDentalPayerDrift } from './tools/get_dental_payer_drift.js';
 import { getBenchmarkHistory, getBenchmarkLeaderboard, getModelScores } from './tools/benchmark.js';
 
-const tools = [
+type ToolDefinition = {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+  service?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  execute(...args: any[]): Promise<unknown>;
+};
+
+const tools: ToolDefinition[] = [
   checkNcciEdits,
   lookupDenialCode,
   lookupFeeSchedule,
@@ -63,7 +72,7 @@ const tools = [
 ];
 
 const server = new Server(
-  { name: 'upstream-mcp', version: '0.1.0' },
+  { name: 'upstream-mcp', version: '0.2.0' },
   { capabilities: { tools: {} } },
 );
 
@@ -91,18 +100,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const selected = (tool as any).service === 'data' ? dataClient : client;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await (tool as any).execute(selected, request.params.arguments ?? {});
+    const selected = tool.service === 'data' ? dataClient : client;
+    const result = await tool.execute(selected, request.params.arguments ?? {});
     return {
       content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
     };
   } catch (err) {
-    const message =
-      err instanceof UpstreamAPIError ? err.message : 'Unexpected error';
+    if (err instanceof UpstreamAPIError) {
+      return {
+        content: [{ type: 'text', text: err.message }],
+        isError: true,
+      };
+    }
+    const message = err instanceof Error ? err.message : 'Unexpected error';
     return {
-      content: [{ type: 'text', text: message }],
+      content: [{ type: 'text', text: `${request.params.name}: ${message}` }],
       isError: true,
     };
   }

@@ -6,6 +6,7 @@ import { checkPriorAuthReadiness } from '../src/tools/check_prior_auth_readiness
 import { lookupDenialCode } from '../src/tools/lookup_denial_code.js';
 import { lookupFeeSchedule } from '../src/tools/lookup_fee_schedule.js';
 import { getDenialClusters } from '../src/tools/get_denial_clusters.js';
+import { getModelScores } from '../src/tools/benchmark.js';
 import {
   getDatasetReadiness,
   getDatasetRealism,
@@ -661,5 +662,80 @@ describe('checkPriorAuthReadiness.execute', () => {
       expect(err).toBeInstanceOf(UpstreamAPIError);
       expect((err as UpstreamAPIError).statusCode).toBe(400);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Benchmark tools (getModelScores filtering)
+// ---------------------------------------------------------------------------
+
+describe('getModelScores.execute', () => {
+  const mockLeaderboard = {
+    leaderboard: [
+      { rank: 1, model: 'claude-opus-4-8', accuracy: 0.94, f1: 0.92 },
+      { rank: 2, model: 'gpt-4o', accuracy: 0.91, f1: 0.89 },
+    ],
+  };
+
+  beforeEach(() => {
+    process.env = { ...process.env };
+    process.env['UPSTREAM_DATA_API_KEY'] = 'data_key';
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it('returns full leaderboard when no model_id specified', async () => {
+    const mockFetch = makeFetchMock(200, mockLeaderboard);
+    vi.stubGlobal('fetch', mockFetch);
+
+    const result = await getModelScores.execute(new UpstreamAPIClient(UPSTREAM_DATA_CONFIG));
+    expect(result).toEqual(mockLeaderboard);
+  });
+
+  it('returns single model entry when model_id matches', async () => {
+    const mockFetch = makeFetchMock(200, mockLeaderboard);
+    vi.stubGlobal('fetch', mockFetch);
+
+    const result = await getModelScores.execute(
+      new UpstreamAPIClient(UPSTREAM_DATA_CONFIG),
+      { model_id: 'gpt-4o' },
+    );
+    expect(result).toEqual(mockLeaderboard.leaderboard[1]);
+  });
+
+  it('throws UpstreamAPIError 404 when model_id not found', async () => {
+    const mockFetch = makeFetchMock(200, mockLeaderboard);
+    vi.stubGlobal('fetch', mockFetch);
+
+    try {
+      await getModelScores.execute(
+        new UpstreamAPIClient(UPSTREAM_DATA_CONFIG),
+        { model_id: 'nonexistent' },
+      );
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      expect((err as UpstreamAPIError).statusCode).toBe(404);
+    }
+  });
+
+  it('throws UpstreamAPIError 502 when leaderboard is missing from response', async () => {
+    const mockFetch = makeFetchMock(200, {});
+    vi.stubGlobal('fetch', mockFetch);
+
+    try {
+      await getModelScores.execute(
+        new UpstreamAPIClient(UPSTREAM_DATA_CONFIG),
+        { model_id: 'claude-opus-4-8' },
+      );
+      expect.fail('Should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(UpstreamAPIError);
+      expect((err as UpstreamAPIError).statusCode).toBe(502);
+    }
+  });
+
+  it('marks benchmark tools for the data service', () => {
+    expect(getModelScores.service).toBe('data');
   });
 });

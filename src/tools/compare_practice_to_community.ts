@@ -1,4 +1,11 @@
 import { UpstreamAPIClient } from '../client.js';
+import { UpstreamAPIError } from '../errors.js';
+
+function validateEmail(email: string): void {
+  if (!email.includes('@') || email.length > 254) {
+    throw new UpstreamAPIError('email must be a valid email address', 400);
+  }
+}
 
 export const comparePracticeToCommunity = {
   name: 'compare_practice_to_community',
@@ -47,6 +54,7 @@ export const comparePracticeToCommunity = {
       your_appeal_win_rate?: number;
     },
   ) {
+    validateEmail(args.email);
     return client.post('/api/v1/public/payer-scorecard/compare/', args);
   },
 };

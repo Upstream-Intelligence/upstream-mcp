@@ -1,4 +1,5 @@
 import { UpstreamAPIClient } from '../client.js';
+import { UpstreamAPIError } from '../errors.js';
 
 // Benchmark leaderboard tools target the Upstream Data service (a separate host + key
 // from the platform API). They are marked `service: 'data'` so index.ts dispatches
@@ -43,19 +44,20 @@ export const getModelScores = {
     },
     required: [],
   },
-  async execute(client: UpstreamAPIClient, args: { model_id?: string }) {
+  async execute(client: UpstreamAPIClient, args?: { model_id?: string }) {
     const data = await client.get<Record<string, unknown>>(`${BENCHMARKS_BASE}/latest`);
-    if (args.model_id) {
+    const modelId = args?.model_id;
+    if (modelId) {
       const leaderboard = data.leaderboard as Array<Record<string, unknown>> | undefined;
       if (!leaderboard) {
-        return { error: 'Leaderboard data not available' };
+        throw new UpstreamAPIError('Leaderboard data not available', 502);
       }
       const model = leaderboard.find(
         (entry) =>
-          String(entry.model || '').toLowerCase() === args.model_id!.toLowerCase(),
+          String(entry.model || '').toLowerCase() === modelId.toLowerCase(),
       );
       if (!model) {
-        return { error: `Model "${args.model_id}" not found in leaderboard` };
+        throw new UpstreamAPIError(`Model "${modelId}" not found in leaderboard`, 404);
       }
       return model;
     }

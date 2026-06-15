@@ -125,12 +125,25 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 | `get_model_scores` | `[Free]` | Get per-specialty benchmark scores for a specific model (or all models if model_id omitted). Returns accuracy, F1, precision, and recall per RCM specialty. |
 | `get_benchmark_history` | `[Free]` | Get the history of all past RCM Arena benchmark runs. Returns run_id, date, top model, and top accuracy for each run. |
 
-### Workflows by practice type
+### ABA workflow
 
 | Tool | Tier | What it does |
 |---|---|---|
-| `get_authorization_status` | `[Paid]` | Authorization state for a patient. Hours or units authorized, used, remaining, expiry date, and renewal urgency (red, amber, green). Routes per specialty (session units, stay days, procedure caps, visit limits, and the like). |
 | `get_aba_session_tracker` | `[Paid]` | ABA session authorization status by patient reference: authorized hours, sessions used, hours remaining, expiry date, risk level (red / amber / green), renewal urgency. Use in ABA billing workflows. Patient reference is the anonymized token from your Upstream dashboard — never PHI. |
+| `get_aba_payer_comparison` | `[Paid]` | Payer-side approval rates for the seven ABA CPT codes (97151-97158) across active payers. Use to identify which payers are denying the highest-revenue ABA codes. |
+
+### Dental workflow
+
+| Tool | Tier | What it does |
+|---|---|---|
+| `query_dental_fee_schedule` | `[Paid]` | Upstream-tracked dental fee schedule for a payer + CDT code. Includes posted rate, network status, last drift event, and reimbursement ratio versus UCR. |
+| `score_dental_claim_denial_risk` | `[Paid]` | Scores pending/recent dental claims with CatBoost risk model. Returns per-claim risk score (0-100), risk band, SHAP factors, and pre-submission actions. |
+| `get_dental_payer_drift` | `[Paid]` | Dental payer behavioral drift: reimbursement drops, denial spikes, silent PPO indicators, downcoding over 90 days. Detects payers quietly changing contracts. |
+
+### Patient workflow
+
+| Tool | Tier | What it does |
+|---|---|---|
 | `get_patient_propensity` | `[Paid]` | Patient collectibility signal with collection probability and recommended approach. Powered by Upstream's propensity model. |
 
 ---
@@ -156,9 +169,11 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 - "What is the Medicare rate for CPT 97153?"
 - "Show me RVUs for 97155 facility versus non facility."
 
-**Workflows by practice type:**
-- "Check authorization status for patient ref UP-4492."
-- "What is the collectibility score for patient ref UP-8831?"
+**Dental:**
+- "Query Delta Dental's fee schedule for CDT code D2740."
+- "Score my pending dental claims for denial risk."
+- "Show me payer drift for Delta Dental over the last 90 days."
+- "Compare payer approval rates for ABA CPT codes."
 
 ---
 

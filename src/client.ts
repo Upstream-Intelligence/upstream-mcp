@@ -2,6 +2,10 @@ import { UpstreamAPIError } from './errors.js';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const MAX_ERROR_BODY_CHARS = 500;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 500;
+
+const RETRYABLE_STATUS_CODES = new Set([429, 502, 503, 504]);
 
 /**
  * Transport configuration for one upstream service. The same hardened client serves both the
@@ -46,13 +50,17 @@ function resolveBaseUrl(config: UpstreamClientConfig): string {
   try {
     parsed = new URL(raw);
   } catch {
-    throw new Error(`${config.baseUrlEnv} is not a valid URL: ${raw}`);
+    const colonIdx = raw.indexOf(':');
+    const protocol = colonIdx > 0 ? raw.slice(0, colonIdx) : 'missing';
+    throw new Error(
+      `${config.baseUrlEnv} is not a valid URL (protocol: ${protocol})`,
+    );
   }
   const isLocalhost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
   const allowed = parsed.protocol === 'https:' || (parsed.protocol === 'http:' && isLocalhost);
   if (!allowed) {
     throw new Error(
-      `${config.baseUrlEnv} must use https (http is allowed only for localhost): ${raw}`,
+      `${config.baseUrlEnv} must use https (http is allowed only for localhost). Got protocol: ${parsed.protocol}`,
     );
   }
   return raw.replace(/\/+$/, ''); // strip trailing slash so `${base}${path}` never doubles it
@@ -94,12 +102,29 @@ export class UpstreamAPIClient {
         url.searchParams.set(k, v);
       }
     }
-    return this.request<T>(url, { method: 'GET' });
+    return this.requestWithRetry<T>(url, { method: 'GET' });
   }
 
   async post<T>(path: string, body: unknown): Promise<T> {
     const url = new URL(`${this.baseUrl}${path}`);
-    return this.request<T>(url, { method: 'POST', body: JSON.stringify(body) });
+    return this.requestWithRetry<T>(url, { method: 'POST', body: JSON.stringify(body) });
+  }
+
+  private async requestWithRetry<T>(url: URL, init: RequestInit): Promise<T> {
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return await this.request<T>(url, init);
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        if (err instanceof UpstreamAPIError && RETRYABLE_STATUS_CODES.has(err.statusCode) && attempt < MAX_RETRIES) {
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * (attempt + 1)));
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastError!;
   }
 
   private async request<T>(url: URL, init: RequestInit): Promise<T> {

@@ -29,7 +29,7 @@ A Model Context Protocol server that exposes Upstream's Care Intelligence Platfo
 
 Billing teams use it to get real answers on claim risk, denial codes, payer behavior, and prior-auth readiness. With upstream-mcp installed, the assistant calls Upstream's network of operators and returns the real signal with specific dollar impact and the recommended fix.
 
-Works across ABA, SNF, PT/OT, dental, dialysis, imaging, home health, and behavioral health. The MCP routes specialty queries to the right backend.
+Built for healthcare specialty practices with high prior-authorization burden. One connected platform, specialty-aware: the MCP routes specialty queries to the right backend.
 
 ## What it looks like
 
@@ -38,9 +38,9 @@ Works across ABA, SNF, PT/OT, dental, dialysis, imaging, home health, and behavi
   "coverage_state": "active",
   "prior_auth_required": true,
   "readiness_state": "ready_when_assembled",
-  "requirements": ["BCBA credentials current", "FBA within payer window"],
-  "step_therapy": null,
-  "documentation": ["Treatment plan with measurable goals", "Supervision ratio"],
+  "requirements": ["Diagnosis on payer's covered list", "Step therapy documented"],
+  "step_therapy": "completed",
+  "documentation": ["Chart notes supporting medical necessity", "Prior treatment history"],
   "next_safe_action": "Gather documentation before submitting. All requirements can be satisfied."
 }
 ```
@@ -85,7 +85,7 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 ## Tools available to Claude
 
 `[Free]` tools work on the free evaluation tier (rate limited, no PHI).
-`[Paid]` tools require an `starter` or `pro` API tier. See [Code license vs. service terms](#code-license-vs-service-terms) below.
+`[Paid]` tools require a paid API tier (see [upstream.cx/pricing](https://upstream.cx/pricing)). See [Code license vs. service terms](#code-license-vs-service-terms) below.
 
 ### Claim intelligence
 
@@ -93,7 +93,7 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 |---|---|---|
 | `scan_claim` | `[Free]` rate limited | Pre-submission claim risk scan. Checks NCCI edits, authorization requirements, denial probability, and payer specific patterns. Returns a risk signal with the specific issues to fix before submission. |
 | `check_ncci_edits` | `[Free]` | Check whether two CPT codes can be billed together. Returns edit type (PTP or MUE), modifier options, and clinical rationale. |
-| `check_prior_auth_readiness` | `[Free]` rate limited | Check prior-auth readiness for a payer and CPT code. Returns readiness_state (ready_when_assembled, no_prior_auth_required, or unknown), requirements, documentation needed, and next_safe_action. Specialty support: ABA, dental, PT/OT, SNF, with more added quarterly. |
+| `check_prior_auth_readiness` | `[Free]` rate limited | Check prior-auth readiness for a payer and CPT code. Returns readiness_state (ready_when_assembled, no_prior_auth_required, or unknown), requirements, documentation needed, and next_safe_action. Specialty-aware, with coverage expanding over time. |
 
 ### Denial intelligence
 
@@ -121,7 +121,7 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 
 | Tool | Tier | What it does |
 |---|---|---|
-| `get_authorization_status` | `[Paid]` | Authorization state for a patient. Hours or units authorized, used, remaining, expiry date, and renewal urgency (red, amber, green). Routes per specialty (ABA session units, SNF stay days, dental procedure caps, PT/OT visit limits, imaging procedure approvals, dialysis treatment authorizations). |
+| `get_authorization_status` | `[Paid]` | Authorization state for a patient. Hours or units authorized, used, remaining, expiry date, and renewal urgency (red, amber, green). Routes per specialty (session units, stay days, procedure caps, visit limits, and the like). |
 | `get_aba_session_tracker` | `[Paid]` | ABA session authorization status by patient reference: authorized hours, sessions used, hours remaining, expiry date, risk level (red / amber / green), renewal urgency. Use in ABA billing workflows. Patient reference is the anonymized token from your Upstream dashboard — never PHI. |
 | `get_patient_propensity` | `[Paid]` | Patient collectibility signal with collection probability and recommended approach. Powered by Upstream's propensity model. |
 
@@ -130,9 +130,9 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 ## Example questions Claude can answer
 
 **Claim work:**
-- "Scan this claim for UnitedHealthcare. CPT 97153, 97155. Diagnosis F84.0. POS 11."
+- "Scan this claim for UnitedHealthcare. CPT 96413, 96415. POS 11."
 - "Can I bill 97153 and 97155 together on the same claim?"
-- "Check prior-auth readiness for Aetna CPT 97153 before I submit."
+- "Check prior-auth readiness for Aetna CPT 96365 before I submit."
 
 **Denial work:**
 - "What does denial code 97 mean and how do I fix it?"
@@ -207,7 +207,6 @@ Point Claude at the local build:
 | Tier | Calls per month | Cost |
 |---|---|---|
 | Free | 500 | $0 |
-| Pioneer (beta) | 5,000 | $49 |
 | Production | Higher caps available | See [upstream.cx/pricing](https://upstream.cx/pricing) |
 
 When the monthly quota is exceeded, tools return a clear error with current tier and a direct upgrade link. No silent failures. No degraded responses.
@@ -264,7 +263,7 @@ Product: [upstream.cx](https://upstream.cx) · [Newsletter](https://upstream.cx/
 
 ---
 
-Built by [Upstream Intelligence](https://upstream.cx). Pioneer Program: [upstream.cx/pioneer](https://upstream.cx/pioneer).
+Built by [Upstream Intelligence](https://upstream.cx).
 
 <div align="center">
 

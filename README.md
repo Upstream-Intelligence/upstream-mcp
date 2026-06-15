@@ -125,6 +125,15 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 | `get_model_scores` | `[Free]` | Get per-specialty benchmark scores for a specific model (or all models if model_id omitted). Returns accuracy, F1, precision, and recall per RCM specialty. |
 | `get_benchmark_history` | `[Free]` | Get the history of all past RCM Arena benchmark runs. Returns run_id, date, top model, and top accuracy for each run. |
 
+### Claim operations
+
+| Tool | Tier | What it does |
+|---|---|---|
+| `synthesize_claims` | `[Paid]` | Generate synthetic healthcare claims on demand. Supports professional, institutional, and dental claim types with configurable scenario templates, row counts, seed, and output format. Returns dataset_id, download_url, quality metrics, and denial_rate. |
+| `score_claim` | `[Paid]` | Score a single claim for denial risk using the CatBoost / DenialBrain model. Accepts payer, CPT, charge_amount, prior-auth status, place of service, network status, and diagnosis codes. Returns denial_probability, confidence, top-3 SHAP feature drivers, and model_version. |
+| `run_benchmark` | `[Paid]` | Trigger a new RCM Arena benchmark run comparing multiple models across selected specialties. Returns run_id and status. Use `get_benchmark_report` to retrieve results. |
+| `get_benchmark_report` | `[Free]` | Comprehensive RCM Arena benchmark report with per-specialty breakdowns and CatBoost baseline comparison. Includes rankings, per-specialty scores, cost-per-run, and model-vs-CatBoost deltas. |
+
 ### ABA workflow
 
 | Tool | Tier | What it does |
@@ -174,6 +183,12 @@ Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys
 - "Score my pending dental claims for denial risk."
 - "Show me payer drift for Delta Dental over the last 90 days."
 - "Compare payer approval rates for ABA CPT codes."
+
+**Claim operations:**
+- "Synthesize 500 institutional claims with the payer_tightening scenario."
+- "Score this claim: Aetna, CPT 97153, $350, in-network, POS 11."
+- "Run a benchmark comparing claude-opus-4-8 vs gpt-4o on ABA and dental."
+- "Get the latest benchmark report with per-specialty breakdowns."
 
 ---
 

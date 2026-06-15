@@ -33,6 +33,7 @@ import {
 } from './tools/synthetic_data.js';
 import { getDentalPayerDrift } from './tools/get_dental_payer_drift.js';
 import { getBenchmarkHistory, getBenchmarkLeaderboard, getModelScores } from './tools/benchmark.js';
+import { getBenchmarkReport, runBenchmark, scoreClaim, synthesizeClaims } from './tools/claims.js';
 
 type ToolDefinition = {
   name: string;
@@ -69,6 +70,10 @@ const tools: ToolDefinition[] = [
   getBenchmarkLeaderboard,
   getModelScores,
   getBenchmarkHistory,
+  synthesizeClaims,
+  scoreClaim,
+  runBenchmark,
+  getBenchmarkReport,
 ];
 
 const server = new Server(

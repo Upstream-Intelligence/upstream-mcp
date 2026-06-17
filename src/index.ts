@@ -34,6 +34,7 @@ import {
 import { getDentalPayerDrift } from './tools/get_dental_payer_drift.js';
 import { getBenchmarkHistory, getBenchmarkLeaderboard, getModelScores } from './tools/benchmark.js';
 import { getBenchmarkReport, runBenchmark, scoreClaim, synthesizeClaims } from './tools/claims.js';
+import { conveneLlmCouncil, draftCareAction } from './tools/actions.js';
 
 type ToolDefinition = {
   name: string;

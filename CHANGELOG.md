@@ -26,6 +26,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   paths move from `/api/v1/data/packs/{id}/*` to
   `/api/v1/data/catalog/{dataset_id}/*`.
 
+### Removed
+
+- **Three unfinished agentic tools removed before any release** (`convene_llm_council`,
+  `draft_care_action`, `generate_pas_payload`). They were imported but never added to the
+  served tools array, shipped without tests, CHANGELOG, or README, and were unreachable as
+  dead code. Two of them (`convene_llm_council`, `draft_care_action`) forward to the
+  upstream-data `/api/v1/score/council` and `/api/v1/actions/draft` endpoints, which call
+  frontier LLMs through OpenRouter — a provider with no HIPAA BAA — and the council endpoint
+  performs no DLP scrub on its input, so exposing them on a public MCP client would re-open
+  the PHI boundary the dataset tools were re-derived to close. Removed rather than registered;
+  git history retains the source if a properly bounded, tested version is wired in later.
+
 ### Added
 
 - `UpstreamClientConfig` + `UPSTREAM_DATA_CONFIG`: the hardened API client is now

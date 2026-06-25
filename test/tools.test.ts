@@ -230,6 +230,7 @@ describe('UpstreamAPIClient', () => {
     new UpstreamAPIClient();
 
     expect(errSpy).toHaveBeenCalledOnce();
+    expect(errSpy.mock.calls[0]?.[0]).not.toContain('UPSTREAM_API_KEY');
   });
 });
 
@@ -302,6 +303,16 @@ describe('UpstreamAPIClient (Upstream Data service config)', () => {
       expect((err as UpstreamAPIError).message).toBe('Upstream Data error (HTTP 500)');
       expect((err as UpstreamAPIError).message).not.toContain('boom');
     }
+  });
+
+  it('warns without logging the data-service env var name', () => {
+    delete process.env['UPSTREAM_DATA_API_KEY'];
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    new UpstreamAPIClient(UPSTREAM_DATA_CONFIG);
+
+    expect(errSpy).toHaveBeenCalledOnce();
+    expect(errSpy.mock.calls[0]?.[0]).not.toContain('UPSTREAM_DATA_API_KEY');
   });
 });
 

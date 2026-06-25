@@ -89,8 +89,8 @@ export class UpstreamAPIClient {
     if (!this.apiKey) {
       // stderr is safe for an MCP server (stdout is the JSON-RPC protocol channel).
       console.error(
-        `upstream-mcp: ${config.apiKeyEnv} is not set; authenticated ${config.serviceLabel} ` +
-          'endpoints will fail. Set it to a key from https://upstream.cx/developers/keys',
+        `upstream-mcp: API key is not set; authenticated ${config.serviceLabel} ` +
+          'endpoints will fail. Set it from https://upstream.cx/developers/keys',
       );
     }
   }

@@ -29,13 +29,13 @@ export const UPSTREAM_API_CONFIG: UpstreamClientConfig = {
 
 /**
  * The Upstream Data synthetic-claims service — a SEPARATE host and key from the platform API.
- * `data.upstream.cx` is the marketing site, NOT the API; the API is the Railway service below,
- * overridable via UPSTREAM_DATA_SERVICE_URL (e.g. once a stable branded subdomain is wired).
+ * `data.upstream.cx` is the marketing site, NOT the API; the API uses its dedicated subdomain and
+ * remains overridable via UPSTREAM_DATA_SERVICE_URL for local or isolated deployments.
  */
 export const UPSTREAM_DATA_CONFIG: UpstreamClientConfig = {
   baseUrlEnv: 'UPSTREAM_DATA_SERVICE_URL',
   apiKeyEnv: 'UPSTREAM_DATA_API_KEY',
-  defaultBaseUrl: 'https://upstream-data-production.up.railway.app',
+  defaultBaseUrl: 'https://api.data.upstream.cx',
   serviceLabel: 'Upstream Data',
 };
 

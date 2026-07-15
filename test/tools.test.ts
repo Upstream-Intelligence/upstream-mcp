@@ -254,7 +254,7 @@ describe('UpstreamAPIClient (Upstream Data service config)', () => {
     vi.restoreAllMocks();
   });
 
-  it('defaults to the upstream-data Railway host and sends UPSTREAM_DATA_API_KEY', async () => {
+  it('defaults to the branded Upstream Data API host and sends UPSTREAM_DATA_API_KEY', async () => {
     process.env['UPSTREAM_DATA_API_KEY'] = 'data_key_xyz';
     const mockFetch = makeFetchMock(200, { synthetic_only: true });
     vi.stubGlobal('fetch', mockFetch);
@@ -263,7 +263,7 @@ describe('UpstreamAPIClient (Upstream Data service config)', () => {
     await dataClient.get('/api/v1/data/catalog/');
 
     const [calledUrl, calledInit] = mockFetch.mock.calls[0] as [URL, RequestInit & { headers: Record<string, string> }];
-    expect(calledUrl.toString()).toBe('https://upstream-data-production.up.railway.app/api/v1/data/catalog/');
+    expect(calledUrl.toString()).toBe('https://api.data.upstream.cx/api/v1/data/catalog/');
     expect(calledInit.headers['X-API-Key']).toBe('data_key_xyz');
   });
 
@@ -457,7 +457,7 @@ describe('synthetic data (dataset catalog) tools', () => {
     });
     const [calledUrl] = mockFetch.mock.calls[0] as [URL, RequestInit];
     expect(calledUrl.toString()).toBe(
-      'https://upstream-data-production.up.railway.app/api/v1/data/catalog/',
+      'https://api.data.upstream.cx/api/v1/data/catalog/',
     );
   });
 

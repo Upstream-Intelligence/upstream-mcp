@@ -9,15 +9,13 @@
 
 # upstream-mcp
 
-### Care Intelligence tools for any workflow.
+### Synthetic payer and claims data, as MCP tools.
 
-Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. Prior-auth readiness. The Workflow Bridge between clinical operations and payer systems.
+The Model Context Protocol server for the [Upstream Data API](https://data.upstream.cx) — synthetic claims generation, dataset catalogs, and CatBoost denial-risk scoring for developer agents.
 
 [![npm](https://img.shields.io/npm/v/@upstream-intelligence/mcp?color=0454F1)](https://www.npmjs.com/package/@upstream-intelligence/mcp)
 [![License](https://img.shields.io/github/license/Upstream-Intelligence/upstream-mcp?color=0454F1)](LICENSE)
 [![Issues](https://img.shields.io/github/issues/Upstream-Intelligence/upstream-mcp?color=0454F1)](https://github.com/Upstream-Intelligence/upstream-mcp/issues)
-[![upstream.cx](https://img.shields.io/badge/upstream-cx-0454F1)](https://upstream.cx)
-[![Newsletter](https://img.shields.io/badge/newsletter-subscribe-0454F1)](https://upstream.cx/newsletter)
 
 </div>
 
@@ -25,39 +23,20 @@ Pre-submission claim risk. Live denial intelligence. Payer behavioral signals. P
 
 ## What this is
 
-A Model Context Protocol server that exposes Upstream's Care Intelligence Platform as MCP tools. The Workflow Bridge pattern connects your clinical operations tooling to live payer intelligence without shipping PHI upstream.
+A thin MCP server that exposes the Upstream Data API (`https://api.data.upstream.cx`) to any MCP-capable agent. Sixteen tools in three groups:
 
-Billing teams use it to get real answers on claim risk, denial codes, payer behavior, and prior-auth readiness. With upstream-mcp installed, the assistant calls Upstream's network of operators and returns the real signal with specific dollar impact and the recommended fix.
+- **`catalog_*`** — discover data packs, datasets, schemas, and the live model. Public, no key.
+- **`synthesize_*`** — full batch dataset generation and download. Key-gated.
+- **`playground_*`** — inline generation (≤1000 rows), seeded evaluation, denial-risk scoring, what-if scoring, denial diagnostics, delivery recovery, and live reference data (NPI, NCCI, Medicare fee). Samples are public; the rest are key-gated.
 
-Built for healthcare specialty practices with high prior-authorization burden. One connected platform, specialty-aware: the MCP routes specialty queries to the right backend.
-
-## What it looks like
-
-```json
-{
-  "coverage_state": "active",
-  "prior_auth_required": true,
-  "readiness_state": "ready_when_assembled",
-  "requirements": ["Diagnosis on payer's covered list", "Step therapy documented"],
-  "step_therapy": "completed",
-  "documentation": ["Chart notes supporting medical necessity", "Prior treatment history"],
-  "next_safe_action": "Gather documentation before submitting. All requirements can be satisfied."
-}
-```
-
-Prior-auth readiness for a payer + CPT check. No PHI. Payer name and CPT code only.
-
-The Upstream Data ecosystem at [data.upstream.cx](https://data.upstream.cx) provides structured payer intelligence via the `/data/v1` API surface (prior-auth readiness, requirements benchmarks, denial risk). This MCP is the Workflow Bridge to those surfaces.
-
----
+All data is synthetic. No PHI crosses this server.
 
 ## Install
 
 ### Claude Code
 
 ```bash
-claude mcp add upstream -- npx -y @upstream-intelligence/mcp
-export UPSTREAM_API_KEY=your_key_here
+claude mcp add upstream-data -- npx -y @upstream-intelligence/mcp
 ```
 
 ### Claude Desktop
@@ -67,149 +46,102 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "upstream": {
+    "upstream-data": {
       "command": "npx",
       "args": ["-y", "@upstream-intelligence/mcp"],
       "env": {
-        "UPSTREAM_API_KEY": "your_key_here"
+        "UPSTREAM_DATA_API_KEY": "your_key_here"
       }
     }
   }
 }
 ```
 
-Free API key (500 calls per month, no credit card): [upstream.cx/developers/keys](https://upstream.cx/developers/keys)
-
----
-
-## Tools available to Claude
-
-`[Free]` tools work on the free evaluation tier (rate limited, no PHI).
-`[Paid]` tools require a paid API tier (see [upstream.cx/pricing](https://upstream.cx/pricing)). See [Code license vs. service terms](#code-license-vs-service-terms) below.
-
-### Claim intelligence
-
-| Tool | Tier | What it does |
-|---|---|---|
-| `scan_claim` | `[Free]` rate limited | Pre-submission claim risk scan. Checks NCCI edits, authorization requirements, denial probability, and payer specific patterns. Returns a risk signal with the specific issues to fix before submission. |
-| `check_ncci_edits` | `[Free]` | Check whether two CPT codes can be billed together. Returns edit type (PTP or MUE), modifier options, and clinical rationale. |
-| `check_prior_auth_readiness` | `[Free]` rate limited | Check prior-auth readiness for a payer and CPT code. Returns readiness_state (ready_when_assembled, no_prior_auth_required, or unknown), requirements, documentation needed, and next_safe_action. Specialty-aware, with coverage expanding over time. |
-
-### Denial intelligence
-
-| Tool | Tier | What it does |
-|---|---|---|
-| `lookup_denial_code` | `[Free]` | Look up any CARC denial reason code. Returns plain English explanation, root causes, corrective actions, and the regulatory basis. |
-| `get_denial_clusters` | `[Paid]` | Active denial clusters with root cause labels and dollar impact. When `cross_customer_signal: true`, the pattern is affecting multiple operators in the network simultaneously. Not just yours. |
-| `get_industry_signals` | `[Paid]` | Network wide anomalies. Denial patterns affecting multiple practices on the same day. The early warning that no single practice tool can produce. |
-
-### Payer intelligence
-
-| Tool | Tier | What it does |
-|---|---|---|
-| `get_payer_scorecard` | `[Paid]` | A to F grade and denial rate for a payer by specialty. Includes top denial codes, payment timing percentiles, and historical appeal success rates. |
-| `compare_practice_to_community` | `[Free, lead-capture]` | Compare your practice's payer-specific metrics (denial rate, days-to-pay, appeal win rate) against the Upstream network aggregate for that payer + specialty. Requires email — saved as a lead. Returns delta metrics + risk-adjusted CTA. |
-| `check_payer_behavior` | `[Paid]` | Behavioral risk score and cluster classification (Aggressive Denier, Slow Payer, Prompt Payer, Underpayer). Includes recent policy changes and the specific dates of detection. |
-
-### Reimbursement
-
-| Tool | Tier | What it does |
-|---|---|---|
-| `lookup_fee_schedule` | `[Free]` | CMS national fee schedule rates for any CPT code. Returns facility and non facility rates, RVUs, and geographic adjusters. |
-
-### Benchmark leaderboard
-
-| Tool | Tier | What it does |
-|---|---|---|
-| `get_benchmark_leaderboard` | `[Free]` | Get the latest RCM Arena benchmark leaderboard with model rankings across all RCM specialties. Returns rank, model name, overall accuracy, F1 score, and cost per run. |
-| `get_model_scores` | `[Free]` | Get per-specialty benchmark scores for a specific model (or all models if model_id omitted). Returns accuracy, F1, precision, and recall per RCM specialty. |
-| `get_benchmark_history` | `[Free]` | Get the history of all past RCM Arena benchmark runs. Returns run_id, date, top model, and top accuracy for each run. |
-
-### Claim operations
-
-| Tool | Tier | What it does |
-|---|---|---|
-| `synthesize_claims` | `[Paid]` | Generate synthetic healthcare claims on demand. Supports professional, institutional, and dental claim types with configurable scenario templates, row counts, seed, and output format. Returns dataset_id, download_url, quality metrics, and denial_rate. |
-| `score_claim` | `[Paid]` | Score a single claim for denial risk using the CatBoost / DenialBrain model. Accepts payer, CPT, charge_amount, prior-auth status, place of service, network status, and diagnosis codes. Returns denial_probability, confidence, top-3 SHAP feature drivers, and model_version. |
-| `run_benchmark` | `[Paid]` | Trigger a new RCM Arena benchmark run comparing multiple models across selected specialties. Returns run_id and status. Use `get_benchmark_report` to retrieve results. |
-| `get_benchmark_report` | `[Free]` | Comprehensive RCM Arena benchmark report with per-specialty breakdowns and CatBoost baseline comparison. Includes rankings, per-specialty scores, cost-per-run, and model-vs-CatBoost deltas. |
-
-### ABA workflow
-
-| Tool | Tier | What it does |
-|---|---|---|
-| `get_aba_session_tracker` | `[Paid]` | ABA session authorization status by patient reference: authorized hours, sessions used, hours remaining, expiry date, risk level (red / amber / green), renewal urgency. Use in ABA billing workflows. Patient reference is the anonymized token from your Upstream dashboard — never PHI. |
-| `get_aba_payer_comparison` | `[Paid]` | Payer-side approval rates for the seven ABA CPT codes (97151-97158) across active payers. Use to identify which payers are denying the highest-revenue ABA codes. |
-
-### Dental workflow
-
-| Tool | Tier | What it does |
-|---|---|---|
-| `query_dental_fee_schedule` | `[Paid]` | Upstream-tracked dental fee schedule for a payer + CDT code. Includes posted rate, network status, last drift event, and reimbursement ratio versus UCR. |
-| `score_dental_claim_denial_risk` | `[Paid]` | Scores pending/recent dental claims with CatBoost risk model. Returns per-claim risk score (0-100), risk band, SHAP factors, and pre-submission actions. |
-| `get_dental_payer_drift` | `[Paid]` | Dental payer behavioral drift: reimbursement drops, denial spikes, silent PPO indicators, downcoding over 90 days. Detects payers quietly changing contracts. |
-
-### Patient workflow
-
-| Tool | Tier | What it does |
-|---|---|---|
-| `get_patient_propensity` | `[Paid]` | Patient collectibility signal with collection probability and recommended approach. Powered by Upstream's propensity model. |
-
----
-
-## Example questions Claude can answer
-
-**Claim work:**
-- "Scan this claim for UnitedHealthcare. CPT 96413, 96415. POS 11."
-- "Can I bill 97153 and 97155 together on the same claim?"
-- "Check prior-auth readiness for Aetna CPT 96365 before I submit."
-
-**Denial work:**
-- "What does denial code 97 mean and how do I fix it?"
-- "What denial clusters are active in my account right now?"
-- "Show me network wide denial signals from the last 7 days."
-
-**Payer intelligence:**
-- "What grade does Aetna get for this specialty?"
-- "Compare UnitedHealthcare and Cigna on denial rates."
-- "Has UnitedHealthcare made any recent policy changes for SNF claims?"
-
-**Reimbursement:**
-- "What is the Medicare rate for CPT 97153?"
-- "Show me RVUs for 97155 facility versus non facility."
-
-**Dental:**
-- "Query Delta Dental's fee schedule for CDT code D2740."
-- "Score my pending dental claims for denial risk."
-- "Show me payer drift for Delta Dental over the last 90 days."
-- "Compare payer approval rates for ABA CPT codes."
-
-**Claim operations:**
-- "Synthesize 500 institutional claims with the payer_tightening scenario."
-- "Score this claim: Aetna, CPT 97153, $350, in-network, POS 11."
-- "Run a benchmark comparing claude-opus-4-8 vs gpt-4o on ABA and dental."
-- "Get the latest benchmark report with per-specialty breakdowns."
-
----
-
-## Why an MCP
-
-Most generic chat assistants hallucinate on healthcare billing. They give plausible CARC interpretations that are wrong. They confidently state Aetna's denial rate when no one ever measured it.
-
-Upstream's MCP gives Claude actual data. Real CMS reference tables. Real network behavioral signals. Real payer scorecards measured against operator outcomes.
-
-Claude becomes accurate. Your team trusts the answer.
-
----
+Get an API key at [data.upstream.cx](https://data.upstream.cx). Public tools work without one.
 
 ## Environment variables
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `UPSTREAM_API_KEY` | Optional for free tier | (none) | Get one at [upstream.cx/developers/keys](https://upstream.cx/developers/keys) |
-| `UPSTREAM_BASE_URL` | Optional | `https://api.upstream.cx` | Override for local development or sandbox testing |
+| `UPSTREAM_DATA_API_KEY` | For key-gated tools | (none) | Sent as the `X-API-Key` header. Never logged. |
+| `UPSTREAM_DATA_BASE_URL` | No | `https://api.data.upstream.cx` | Override for staging/local. https required; http allowed only for localhost. |
+| `UPSTREAM_DATA_TIMEOUT_MS` | No | `30000` | Per-request timeout in milliseconds. |
 
----
+Key-gated tools fail fast with an actionable message when `UPSTREAM_DATA_API_KEY` is unset — no network call is made.
+
+## Tools
+
+### Catalog (public)
+
+| Tool | What it does |
+|---|---|
+| `catalog_list_packs` | List data packs: claim types (professional 837P, institutional 837I, dental 837D), their scenario templates, and pricing tiers. |
+| `catalog_list_datasets` | List the synthetic dataset catalog (aba, dental, snf-ma, …) with catalog metadata. |
+| `catalog_get_dataset_schema` | Get the column schema for one dataset by slug. 404 structured error on unknown slugs. |
+| `catalog_get_active_model` | Get the deployed denial-risk model: version, AUC, training date, feature list. |
+
+### Synthesis (key-gated)
+
+| Tool | What it does |
+|---|---|
+| `synthesize_create_dataset` | Generate a full synthetic claims dataset: `{specialty, rows, scenario}` → `dataset_id` + quality metadata. |
+| `synthesize_download_dataset` | Get the download for a `dataset_id` returned by `synthesize_create_dataset`. |
+
+### Playground
+
+| Tool | Key | What it does |
+|---|---|---|
+| `playground_get_samples` | No | Instant pre-generated sample datasets with time-limited download URLs. |
+| `playground_generate` | Yes | Generate rows inline (≤1000, enforced client-side) for interactive exploration. |
+| `playground_evaluate` | Yes | Seeded evaluation: reproduce a run with the same seed and score data quality. |
+| `playground_score_denial_risk` | Yes | Score one claim's denial probability with the deployed CatBoost model. |
+| `playground_score_what_if` | Yes | Re-score a claim under a hypothetical change (`what_if` overrides) for the risk delta. |
+| `playground_diagnostic` | Yes | Diagnose a denial: likely root causes and corrective actions for a claim. |
+| `playground_recover_delivery` | Yes | Recover a fresh download link for a previously generated dataset. |
+| `playground_live_data_npi` | Yes | Live NPI registry lookup for a provider. |
+| `playground_live_data_ncci` | Yes | Live NCCI edit check for a CPT pair. |
+| `playground_live_data_medicare_fee` | Yes | Live Medicare fee schedule rate for a CPT code. |
+
+### Errors
+
+The API returns structured errors as `{error: {code, message, recovery}}`. All three fields are surfaced verbatim in the tool response, e.g.:
+
+```
+ROWS_LIMIT_EXCEEDED: playground generate is limited to 1000 rows — Recovery: Use synthesize_create_dataset for larger batches
+```
+
+Timeouts return a 504 with retry guidance. GETs retry once on network errors; POSTs are never retried (synthesis and scoring are not idempotent).
+
+## Example agent session
+
+```
+> What synthetic datasets can I generate?
+
+  → catalog_list_packs {}
+  {"claim_types": [{"claim_type": "professional", "name": "Professional (837P)",
+    "scenarios": ["baseline", "authorization_surge", ...]}, ...],
+   "pricing": [{"id": "sample", "rows": 1000, "price": 0, ...}, ...]}
+
+  → catalog_list_datasets {}
+  {"datasets": [{"slug": "aba", ...}, {"slug": "dental", ...}, {"slug": "snf-ma", ...}]}
+
+> Show me the ABA schema, then score a claim: Aetna, CPT 97153, $350, no prior auth.
+
+  → catalog_get_dataset_schema {"slug": "aba"}
+  {"columns": [{"name": "payer", "type": "string", ...}, ...]}
+
+  → catalog_get_active_model {}
+  {"model_id": "upstream-denialbrain-v2.0", "version": "2.0.0", "auc": 0.9946, ...}
+
+  → playground_score_denial_risk {"payer": "Aetna", "cpt": "97153",
+      "charge_amount": 350, "has_prior_auth": false}
+  {"denial_probability": 0.41, "drivers": [...], "model_version": "2.0.0"}
+
+> Generate 500 baseline ABA rows to test against.
+
+  → playground_generate {"specialty": "aba", "rows": 500, "scenario": "baseline"}
+  {"rows": [...500 synthetic claim rows...], "quality": {...}}
+```
 
 ## Local development
 
@@ -222,16 +154,16 @@ npm run build
 npm test
 ```
 
-Point Claude at the local build:
+Point an agent at the local build:
 
 ```json
 {
   "mcpServers": {
-    "upstream": {
+    "upstream-data": {
       "command": "node",
       "args": ["/absolute/path/to/upstream-mcp/dist/index.js"],
       "env": {
-        "UPSTREAM_API_KEY": "your_key_here"
+        "UPSTREAM_DATA_API_KEY": "your_key_here"
       }
     }
   }
@@ -240,53 +172,11 @@ Point Claude at the local build:
 
 ---
 
-## Rate limits
-
-| Tier | Calls per month | Cost |
-|---|---|---|
-| Free | 500 | $0 |
-| Production | Higher caps available | See [upstream.cx/pricing](https://upstream.cx/pricing) |
-
-When the monthly quota is exceeded, tools return a clear error with current tier and a direct upgrade link. No silent failures. No degraded responses.
-
----
-
-## What people ask
-
-**Does this work without the paid platform?**
-Yes. The free tier gives you 500 calls per month with no credit card. Claim scanning, denial code lookups, fee schedule queries, and CARC parsing all work on the free tier.
-
-**What does the network signal include?**
-When `get_industry_signals` returns a result, it means multiple operators across the network are seeing the same pattern simultaneously. Aggregated. Anonymized. Statistically validated. Never PHI.
-
-**How fresh is the data?**
-Payer scorecards refresh nightly. Network signals fire in near real time when significance thresholds are crossed. CMS reference tables update on the CMS publication cadence (CARC quarterly, NCCI quarterly, fee schedule annual).
-
-**Is my data secure?**
-Calls to the MCP server are encrypted in transit. Free tier queries are stateless. Paid tier queries are scoped to your customer tenant. The MCP works on patient reference IDs (your internal IDs), not on patient names or DOB.
-
-**Why not just use Claude with web search?**
-Public web data on payer behavior is incomplete, stale, and often wrong. Upstream measures payer behavior against the operator network's actual claim outcomes. The signal is what is happening, not what someone said is happening.
-
-**How does Upstream compare to traditional clearinghouses?**
-Clearinghouses move claims. Upstream interprets payer behavior. Different lane. Most operators run both.
-
----
-
 ## Code license vs. service terms
 
 The MCP client code in this repository is **MIT licensed**. Fork it, audit it, embed it in your stack.
 
-The Upstream API service that this client calls is governed by separate **Service Terms of Use** at [upstream.cx/terms](https://upstream.cx/terms), including:
-
-- Paid plan rate limits and tier-gated tools (see `[Free]` / `[Paid]` markers in the tool tables above).
-- BAA required for any workflow involving Protected Health Information.
-- Acceptable use policy.
-- Free evaluation tier: 500 calls/month, no PHI, restricted to `[Free]` tools.
-
-The license on the client code does not grant API service access. Production usage requires an organization-scoped paid key. Request access at [upstream.cx/developers/keys](https://upstream.cx/developers/keys).
-
----
+The Upstream Data API service that this client calls is governed by separate terms at [upstream.cx/terms](https://upstream.cx/terms). The license on the client code does not grant API service access.
 
 ## Related
 
@@ -297,16 +187,6 @@ Part of the [Upstream Intelligence ecosystem](https://github.com/Upstream-Intell
 - [upstream-community](https://github.com/Upstream-Intelligence/upstream-community) — open ML methodology
 - [awesome-payer-risk](https://github.com/Upstream-Intelligence/awesome-payer-risk) — curated RCM resources
 
-Product: [upstream.cx](https://upstream.cx) · [Newsletter](https://upstream.cx/newsletter) · [Pricing](https://upstream.cx/pricing)
-
 ---
 
 Built by [Upstream Intelligence](https://upstream.cx).
-
-<div align="center">
-
-**[upstream.cx](https://upstream.cx)** · hello@upstream.cx
-
-Care Intelligence Platform.
-
-</div>

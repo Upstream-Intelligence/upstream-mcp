@@ -1,7 +1,7 @@
 {
   "name": "@upstream-intelligence/mcp",
-  "version": "0.2.0",
-  "description": "MCP server for Upstream's Care Intelligence Platform. The Workflow Bridge for pre-submission claim risk, denial intelligence, payer behavioral signals, and prior-auth readiness.",
+  "version": "0.3.0",
+  "description": "MCP server for the Upstream Data API — synthetic payer and claims data: dataset catalog, batch synthesis, playground generation, and denial-risk scoring for developer agents.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

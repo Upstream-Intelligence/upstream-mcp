@@ -9,52 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed (breaking)
 
-- **Synthetic-data tool surface re-derived to the dataset catalog** (Phase 4
-  Category B). The 14 `get_synthetic_pack_*` / `list_synthetic_data_packs` /
-  `compile_synthetic_scenario_dsl` tools are replaced by 6 dataset tools:
-  `list_datasets`, `get_dataset_schema` (public), and `get_dataset_sources`,
-  `get_dataset_scenarios`, `get_dataset_realism`, `get_dataset_readiness`
-  (paid API key). The tool argument `pack_id` becomes `dataset_id` (the stable
-  catalog slug). `pack` was an internal upstream-data detail and no longer appears
-  on the MCP surface. The 8 zero-count manifest tools (world, episode, payer-policy,
-  contract-fee-schedule, payer-contract-simulation, evaluation, adjudication-trace,
-  transaction-surface) and the scenario-DSL tool are removed — they returned
-  misleading empty stubs.
-- **Synthetic-data tools now target the Upstream Data service**, not the platform
-  API. Configure `UPSTREAM_DATA_SERVICE_URL` (defaults to the live host) and
-  `UPSTREAM_DATA_API_KEY` (separate from the platform `UPSTREAM_API_KEY`). The
-  paths move from `/api/v1/data/packs/{id}/*` to
-  `/api/v1/data/catalog/{dataset_id}/*`.
-
-### Removed
-
-- **Three unfinished agentic tools removed before any release** (`convene_llm_council`,
-  `draft_care_action`, `generate_pas_payload`). They were imported but never added to the
-  served tools array, shipped without tests, CHANGELOG, or README, and were unreachable as
-  dead code. Two of them (`convene_llm_council`, `draft_care_action`) forward to the
-  upstream-data `/api/v1/score/council` and `/api/v1/actions/draft` endpoints, which call
-  frontier LLMs through OpenRouter — a provider with no HIPAA BAA — and the council endpoint
-  performs no DLP scrub on its input, so exposing them on a public MCP client would re-open
-  the PHI boundary the dataset tools were re-derived to close. Removed rather than registered;
-  git history retains the source if a properly bounded, tested version is wired in later.
+- **Rebuilt against the current Upstream Data API surface.** The server now exposes
+  only the live `https://api.data.upstream.cx` API: 16 tools in three groups
+  (`catalog_*`, `synthesize_*`, `playground_*`). All 27 legacy tools targeting the
+  platform API (`api.upstream.cx`) and retired data-service routes
+  (`/api/v1/score/*`, `/api/v1/benchmarks/*`, `/data/v1/*`, dataset
+  sources/scenarios/realism/readiness) are removed.
+- **Configuration renamed.** Base URL is now `UPSTREAM_DATA_BASE_URL` (default
+  `https://api.data.upstream.cx`; was `UPSTREAM_DATA_SERVICE_URL` /
+  `UPSTREAM_BASE_URL`). API key is `UPSTREAM_DATA_API_KEY`; the platform
+  `UPSTREAM_API_KEY` is no longer read. Timeout override is now
+  `UPSTREAM_DATA_TIMEOUT_MS` (was `UPSTREAM_REQUEST_TIMEOUT_MS`).
+- **Retry policy tightened.** GETs retry exactly once with backoff on network
+  errors only. POSTs are never retried (synthesis and scoring are not
+  idempotent). HTTP error statuses are never retried.
+- **Auth fail-fast.** Key-gated tools now return an actionable error before any
+  network call when `UPSTREAM_DATA_API_KEY` is unset, instead of a stderr
+  warning at startup.
 
 ### Added
 
-- `UpstreamClientConfig` + `UPSTREAM_DATA_CONFIG`: the hardened API client is now
-  configurable for a second service (host, key env, label) without duplicating its
-  timeout, error-sanitization, and URL-validation logic.
-- Canon guard extended: `test/canon.test.ts` now also fails CI if the legacy
-  synthetic-data pack surface (`get_synthetic_pack*`, `/api/v1/data/packs/`,
-  `pack_id`, etc.) reappears under `src/`.
-
-### Security
-
-- API client hardened: https/localhost base-URL validation (fail at construction),
-  request timeout via `AbortSignal.timeout` → 504, 5xx bodies sanitized (no server
-  internals leaked), 4xx bodies capped, empty-key stderr warning, 429 preserved.
-- Path arguments URL-encoded across tools (`lookup_denial_code`,
-  `lookup_fee_schedule`, dataset tools) to prevent path traversal.
-- Patched moderate dependency CVEs in `hono` + `qs` (`npm audit` → 0).
+- Tools: `catalog_list_packs`, `catalog_list_datasets`, `catalog_get_dataset_schema`,
+  `catalog_get_active_model`, `synthesize_create_dataset`, `synthesize_download_dataset`,
+  `playground_get_samples`, `playground_generate`, `playground_evaluate`,
+  `playground_score_denial_risk`, `playground_score_what_if`, `playground_diagnostic`,
+  `playground_recover_delivery`, `playground_live_data_npi`, `playground_live_data_ncci`,
+  `playground_live_data_medicare_fee`.
+- Structured error passthrough: the API's `{error: {code, message, recovery}}`
+  envelope is surfaced verbatim (including the `detail`/`request_id` variant)
+  via `UpstreamAPIError.describe()`.
+- Client-side input validation (`ToolInputError`) for required fields, integer
+  bounds, and the 1000-row playground limit — invalid calls never hit the network.
+- Unit tests for input validation, error mapping, auth fail-fast, retry policy,
+  and timeout handling (mocked HTTP; no live calls).
 
 ## [0.2.0] - 2026-05-14
 

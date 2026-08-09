@@ -10,7 +10,7 @@ import type { ToolDefinition } from './types.js';
 
 const CLAIM_FIELDS: Record<string, unknown> = {
   payer: { type: 'string', description: 'Payer name or identifier, e.g. "Aetna", "UnitedHealthcare".' },
-  cpt: { type: 'string', description: 'CPT/HCPCS procedure code, e.g. "97153".' },
+  cpt: { type: 'string', description: 'CPT/HCPCS procedure code, e.g. "99213".' },
   charge_amount: { type: 'number', description: 'Charge amount in USD.' },
   has_prior_auth: { type: 'boolean', description: 'Whether prior authorization was obtained.' },
   place_of_service: { type: 'string', description: 'Place-of-service code, e.g. "11" (office).' },
@@ -20,7 +20,7 @@ const CLAIM_FIELDS: Record<string, unknown> = {
     description: 'Provider network status with the payer.',
   },
   line_of_business: { type: 'string', description: 'Line of business, e.g. "commercial", "medicare_advantage".' },
-  specialty: { type: 'string', description: 'Provider specialty context, e.g. "aba", "dental".' },
+  specialty: { type: 'string', description: 'Provider specialty context, e.g. "specialty-clinic", "oncology".' },
   diagnosis_codes: {
     type: 'array',
     items: { type: 'string' },
@@ -59,7 +59,7 @@ export const playgroundGenerate: ToolDefinition = {
   inputSchema: {
     type: 'object',
     properties: {
-      specialty: { type: 'string', description: 'Dataset specialty, e.g. "aba", "dental", "snf-ma".' },
+      specialty: { type: 'string', description: 'Dataset specialty, e.g. "specialty-clinic", "oncology", "pain-management".' },
       rows: {
         type: 'integer',
         description: 'Rows to generate inline (1-1000). Larger requests are rejected — use synthesize_create_dataset.',
@@ -91,7 +91,7 @@ export const playgroundEvaluate: ToolDefinition = {
   inputSchema: {
     type: 'object',
     properties: {
-      specialty: { type: 'string', description: 'Dataset specialty, e.g. "aba", "dental", "snf-ma".' },
+      specialty: { type: 'string', description: 'Dataset specialty, e.g. "specialty-clinic", "oncology", "pain-management".' },
       rows: { type: 'integer', description: 'Rows to evaluate (1-1000).', minimum: 1, maximum: 1000 },
       scenario: { type: 'string', description: 'Scenario template; defaults to baseline.' },
       seed: { type: 'integer', description: 'Seed to reproduce — pass the same seed to compare runs.' },
@@ -229,8 +229,8 @@ export const playgroundLiveDataNcci: ToolDefinition = {
   inputSchema: {
     type: 'object',
     properties: {
-      cpt_a: { type: 'string', description: 'First CPT/HCPCS code, e.g. "97153".' },
-      cpt_b: { type: 'string', description: 'Second CPT/HCPCS code, e.g. "97155".' },
+      cpt_a: { type: 'string', description: 'First CPT/HCPCS code, e.g. "29881".' },
+      cpt_b: { type: 'string', description: 'Second CPT/HCPCS code, e.g. "29880".' },
     },
     required: ['cpt_a', 'cpt_b'],
   },
@@ -252,7 +252,7 @@ export const playgroundLiveDataMedicareFee: ToolDefinition = {
   inputSchema: {
     type: 'object',
     properties: {
-      cpt: { type: 'string', description: 'CPT/HCPCS code, e.g. "97153".' },
+      cpt: { type: 'string', description: 'CPT/HCPCS code, e.g. "99213".' },
     },
     required: ['cpt'],
   },

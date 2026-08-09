@@ -19,7 +19,7 @@ export const synthesizeCreateDataset: ToolDefinition = {
       specialty: {
         type: 'string',
         description:
-          'Dataset specialty to generate, e.g. "aba", "dental", "snf-ma". ' +
+          'Dataset specialty to generate, e.g. "specialty-clinic", "oncology", "orthopedics-msk". ' +
           'See catalog_list_packs / catalog_list_datasets for available values.',
       },
       rows: {

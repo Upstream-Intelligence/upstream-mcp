@@ -9,9 +9,9 @@
 
 # upstream-mcp
 
-### Synthetic payer and claims data, as MCP tools.
+### Synthetic claims data, as MCP tools.
 
-The Model Context Protocol server for the [Upstream Data API](https://data.upstream.cx) — synthetic claims generation, dataset catalogs, and CatBoost denial-risk scoring for developer agents.
+The MCP surface of [Upstream's care-intelligence data branch](https://data.upstream.cx) — a correlated playground, sandbox, and arena of synthetic claims data for healthcare AI builders and revenue-cycle tool builders. General-procedural and specialty datasets, batch synthesis, seeded evaluation, and CatBoost denial-risk scoring, exposed to any MCP-capable agent.
 
 [![npm](https://img.shields.io/npm/v/@upstream-intelligence/mcp?color=0454F1)](https://www.npmjs.com/package/@upstream-intelligence/mcp)
 [![License](https://img.shields.io/github/license/Upstream-Intelligence/upstream-mcp?color=0454F1)](LICENSE)
@@ -75,8 +75,8 @@ Key-gated tools fail fast with an actionable message when `UPSTREAM_DATA_API_KEY
 
 | Tool | What it does |
 |---|---|
-| `catalog_list_packs` | List data packs: claim types (professional 837P, institutional 837I, dental 837D), their scenario templates, and pricing tiers. |
-| `catalog_list_datasets` | List the synthetic dataset catalog (aba, dental, snf-ma, …) with catalog metadata. |
+| `catalog_list_packs` | List data packs: claim types, their scenario templates, and pricing tiers. |
+| `catalog_list_datasets` | List the synthetic dataset catalog (specialty-clinic, oncology, pain-management, …) with catalog metadata. |
 | `catalog_get_dataset_schema` | Get the column schema for one dataset by slug. 404 structured error on unknown slugs. |
 | `catalog_get_active_model` | Get the deployed denial-risk model: version, AUC, training date, feature list. |
 
@@ -123,23 +123,23 @@ Timeouts return a 504 with retry guidance. GETs retry once on network errors; PO
    "pricing": [{"id": "sample", "rows": 1000, "price": 0, ...}, ...]}
 
   → catalog_list_datasets {}
-  {"datasets": [{"slug": "aba", ...}, {"slug": "dental", ...}, {"slug": "snf-ma", ...}]}
+  {"datasets": [{"slug": "specialty-clinic", ...}, {"slug": "oncology", ...}, {"slug": "pain-management", ...}]}
 
-> Show me the ABA schema, then score a claim: Aetna, CPT 97153, $350, no prior auth.
+> Show me the specialty-clinic schema, then score a claim: Aetna, CPT 99213, $180, no prior auth.
 
-  → catalog_get_dataset_schema {"slug": "aba"}
+  → catalog_get_dataset_schema {"slug": "specialty-clinic"}
   {"columns": [{"name": "payer", "type": "string", ...}, ...]}
 
   → catalog_get_active_model {}
   {"model_id": "upstream-denialbrain-v2.0", "version": "2.0.0", "auc": 0.9946, ...}
 
-  → playground_score_denial_risk {"payer": "Aetna", "cpt": "97153",
-      "charge_amount": 350, "has_prior_auth": false}
+  → playground_score_denial_risk {"payer": "Aetna", "cpt": "99213",
+      "charge_amount": 180, "has_prior_auth": false}
   {"denial_probability": 0.41, "drivers": [...], "model_version": "2.0.0"}
 
-> Generate 500 baseline ABA rows to test against.
+> Generate 500 baseline specialty-clinic rows to test against.
 
-  → playground_generate {"specialty": "aba", "rows": 500, "scenario": "baseline"}
+  → playground_generate {"specialty": "specialty-clinic", "rows": 500, "scenario": "baseline"}
   {"rows": [...500 synthetic claim rows...], "quality": {...}}
 ```
 

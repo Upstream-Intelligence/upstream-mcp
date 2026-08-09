@@ -27,6 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   network call when `UPSTREAM_DATA_API_KEY` is unset, instead of a stderr
   warning at startup.
 
+### Changed
+
+- **Examples and docs realigned to the current dataset catalog.** Tool
+  descriptions, README snippets, and test fixtures now reference the aligned
+  datasets (`specialty-clinic`, `oncology`, `pain-management`, …) instead of
+  the retired ABA/SNF/dental vertical framing.
+
 ### Added
 
 - Tools: `catalog_list_packs`, `catalog_list_datasets`, `catalog_get_dataset_schema`,

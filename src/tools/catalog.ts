@@ -10,10 +10,10 @@ import type { ToolDefinition } from './types.js';
 export const catalogListPacks: ToolDefinition = {
   name: 'catalog_list_packs',
   description:
-    'List the Upstream Data pack catalog: available claim types (professional 837P, ' +
-    'institutional 837I, dental 837D) with their scenario templates, plus pricing tiers ' +
-    'with row volumes. Public — no API key required. Use this first to discover which ' +
-    'specialties and scenarios synthesize_create_dataset and playground_generate accept.',
+    'List the Upstream Data pack catalog: available claim types with their scenario ' +
+    'templates, plus pricing tiers with row volumes. Public — no API key required. ' +
+    'Use this first to discover which specialties and scenarios synthesize_create_dataset ' +
+    'and playground_generate accept.',
   inputSchema: { type: 'object', properties: {}, required: [] },
   requiresKey: false,
   async execute(client: UpstreamDataClient) {
@@ -24,9 +24,10 @@ export const catalogListPacks: ToolDefinition = {
 export const catalogListDatasets: ToolDefinition = {
   name: 'catalog_list_datasets',
   description:
-    'List the synthetic dataset catalog (specialty datasets such as aba, dental, snf-ma) ' +
-    'with catalog metadata per entry. Public — no API key required. Use catalog_get_dataset_schema ' +
-    'with a slug from this listing to inspect column layouts before generating data.',
+    'List the synthetic dataset catalog (general procedural and specialty datasets such ' +
+    'as specialty-clinic, oncology, pain-management) with catalog metadata per entry. ' +
+    'Public — no API key required. Use catalog_get_dataset_schema with a slug from this ' +
+    'listing to inspect column layouts before generating data.',
   inputSchema: { type: 'object', properties: {}, required: [] },
   requiresKey: false,
   async execute(client: UpstreamDataClient) {
@@ -38,14 +39,14 @@ export const catalogGetDatasetSchema: ToolDefinition = {
   name: 'catalog_get_dataset_schema',
   description:
     'Get the schema (columns, types, value distributions) for one synthetic dataset by ' +
-    'catalog slug, e.g. "aba", "dental", or "snf-ma". Public — no API key required. ' +
-    'Returns a 404 structured error for an unknown slug.',
+    'catalog slug, e.g. "specialty-clinic", "oncology", or "pain-management". Public — ' +
+    'no API key required. Returns a 404 structured error for an unknown slug.',
   inputSchema: {
     type: 'object',
     properties: {
       slug: {
         type: 'string',
-        description: 'Dataset slug from catalog_list_datasets, e.g. "aba", "dental", "snf-ma".',
+        description: 'Dataset slug from catalog_list_datasets, e.g. "specialty-clinic", "oncology", "pain-management".',
       },
     },
     required: ['slug'],

@@ -54,7 +54,7 @@ describe('UpstreamDataClient requests', () => {
     const mockFetch = makeFetchMock(200, { dataset_id: 'ds_1' });
     vi.stubGlobal('fetch', mockFetch);
 
-    const payload = { specialty: 'aba', rows: 100 };
+    const payload = { specialty: 'specialty-clinic', rows: 100 };
     await new UpstreamDataClient(KEYED_ENV).post('/api/v1/synthesize', payload);
 
     const [, init] = mockFetch.mock.calls[0] as [URL, RequestInit];
@@ -217,7 +217,7 @@ describe('UpstreamDataClient retry policy', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     await expect(
-      new UpstreamDataClient(KEYED_ENV).post('/api/v1/synthesize', { specialty: 'aba' }),
+      new UpstreamDataClient(KEYED_ENV).post('/api/v1/synthesize', { specialty: 'specialty-clinic' }),
     ).rejects.toThrow('fetch failed');
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });

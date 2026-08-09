@@ -99,7 +99,7 @@ describe('auth fail-fast', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     const res = await dispatchTool(new UpstreamDataClient({}), ALL_TOOLS, 'synthesize_create_dataset', {
-      specialty: 'aba',
+      specialty: 'specialty-clinic',
     });
 
     expect(res.isError).toBe(true);
@@ -136,7 +136,7 @@ describe('auth fail-fast', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     const res = await dispatchTool(new UpstreamDataClient(KEYED_ENV), ALL_TOOLS, 'playground_generate', {
-      specialty: 'aba',
+      specialty: 'specialty-clinic',
       rows: 1000,
     });
 
@@ -169,8 +169,8 @@ describe('catalog tools', () => {
     const mockFetch = makeFetchMock(200, { columns: [] });
     vi.stubGlobal('fetch', mockFetch);
 
-    await catalogGetDatasetSchema.execute(new UpstreamDataClient({}), { slug: 'aba' });
-    expect(lastCalledUrl(mockFetch).pathname).toBe('/api/v1/data/catalog/aba/schema');
+    await catalogGetDatasetSchema.execute(new UpstreamDataClient({}), { slug: 'specialty-clinic' });
+    expect(lastCalledUrl(mockFetch).pathname).toBe('/api/v1/data/catalog/specialty-clinic/schema');
   });
 
   it('catalog_get_dataset_schema rejects a missing slug before any network call', async () => {
@@ -206,7 +206,7 @@ describe('synthesize tools', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     await synthesizeCreateDataset.execute(new UpstreamDataClient(KEYED_ENV), {
-      specialty: 'aba',
+      specialty: 'specialty-clinic',
       rows: 500,
       scenario: 'authorization_surge',
     });
@@ -214,7 +214,7 @@ describe('synthesize tools', () => {
     expect(lastCalledUrl(mockFetch).pathname).toBe('/api/v1/synthesize');
     expect(lastRequestInit(mockFetch).method).toBe('POST');
     expect(JSON.parse(String(lastRequestInit(mockFetch).body))).toEqual({
-      specialty: 'aba',
+      specialty: 'specialty-clinic',
       rows: 500,
       scenario: 'authorization_surge',
     });
@@ -224,9 +224,9 @@ describe('synthesize tools', () => {
     const mockFetch = makeFetchMock(200, { dataset_id: 'ds_1' });
     vi.stubGlobal('fetch', mockFetch);
 
-    await synthesizeCreateDataset.execute(new UpstreamDataClient(KEYED_ENV), { specialty: 'dental' });
+    await synthesizeCreateDataset.execute(new UpstreamDataClient(KEYED_ENV), { specialty: 'oncology' });
 
-    expect(JSON.parse(String(lastRequestInit(mockFetch).body))).toEqual({ specialty: 'dental' });
+    expect(JSON.parse(String(lastRequestInit(mockFetch).body))).toEqual({ specialty: 'oncology' });
   });
 
   it('synthesize_create_dataset requires specialty', async () => {
@@ -237,7 +237,7 @@ describe('synthesize tools', () => {
 
   it('synthesize_create_dataset rejects non-integer rows', async () => {
     await expect(
-      synthesizeCreateDataset.execute(new UpstreamDataClient(KEYED_ENV), { specialty: 'aba', rows: 2.5 }),
+      synthesizeCreateDataset.execute(new UpstreamDataClient(KEYED_ENV), { specialty: 'specialty-clinic', rows: 2.5 }),
     ).rejects.toThrow(ToolInputError);
   });
 
@@ -264,14 +264,14 @@ describe('playground tools', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     await playgroundGenerate.execute(new UpstreamDataClient(KEYED_ENV), {
-      specialty: 'aba',
+      specialty: 'specialty-clinic',
       rows: 250,
       seed: 42,
     });
 
     expect(lastCalledUrl(mockFetch).pathname).toBe('/api/v1/playground/generate');
     expect(JSON.parse(String(lastRequestInit(mockFetch).body))).toEqual({
-      specialty: 'aba',
+      specialty: 'specialty-clinic',
       rows: 250,
       seed: 42,
     });
@@ -282,7 +282,7 @@ describe('playground tools', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     await expect(
-      playgroundGenerate.execute(new UpstreamDataClient(KEYED_ENV), { specialty: 'aba', rows: 5000 }),
+      playgroundGenerate.execute(new UpstreamDataClient(KEYED_ENV), { specialty: 'specialty-clinic', rows: 5000 }),
     ).rejects.toThrow(/1000/);
     expect(mockFetch).not.toHaveBeenCalled();
   });
@@ -291,19 +291,19 @@ describe('playground tools', () => {
     const mockFetch = makeFetchMock(200, { score: 0.9 });
     vi.stubGlobal('fetch', mockFetch);
 
-    await playgroundEvaluate.execute(new UpstreamDataClient(KEYED_ENV), { specialty: 'dental', seed: 7 });
+    await playgroundEvaluate.execute(new UpstreamDataClient(KEYED_ENV), { specialty: 'oncology', seed: 7 });
 
     expect(lastCalledUrl(mockFetch).pathname).toBe('/api/v1/playground/evaluate');
-    expect(JSON.parse(String(lastRequestInit(mockFetch).body))).toEqual({ specialty: 'dental', seed: 7 });
+    expect(JSON.parse(String(lastRequestInit(mockFetch).body))).toEqual({ specialty: 'oncology', seed: 7 });
   });
 
   it('playground_score_denial_risk requires payer, cpt, and charge_amount', async () => {
     const client = new UpstreamDataClient(KEYED_ENV);
     await expect(
-      playgroundScoreDenialRisk.execute(client, { payer: 'Aetna', cpt: '97153' }),
+      playgroundScoreDenialRisk.execute(client, { payer: 'Aetna', cpt: '99213' }),
     ).rejects.toThrow(/charge_amount/);
     await expect(
-      playgroundScoreDenialRisk.execute(client, { cpt: '97153', charge_amount: 350 }),
+      playgroundScoreDenialRisk.execute(client, { cpt: '99213', charge_amount: 180 }),
     ).rejects.toThrow(/payer/);
   });
 
@@ -313,8 +313,8 @@ describe('playground tools', () => {
 
     await playgroundScoreDenialRisk.execute(new UpstreamDataClient(KEYED_ENV), {
       payer: 'Aetna',
-      cpt: '97153',
-      charge_amount: 350,
+      cpt: '99213',
+      charge_amount: 180,
       has_prior_auth: true,
       network_status: 'in_network',
     });
@@ -331,8 +331,8 @@ describe('playground tools', () => {
 
     await playgroundScoreWhatIf.execute(new UpstreamDataClient(KEYED_ENV), {
       payer: 'UHC',
-      cpt: '97155',
-      charge_amount: 200,
+      cpt: '99214',
+      charge_amount: 220,
       what_if: { has_prior_auth: true },
     });
 
@@ -387,24 +387,24 @@ describe('live data tools', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     await playgroundLiveDataNcci.execute(new UpstreamDataClient(KEYED_ENV), {
-      cpt_a: '97153',
-      cpt_b: '97155',
+      cpt_a: '29881',
+      cpt_b: '29880',
     });
 
     const url = lastCalledUrl(mockFetch);
     expect(url.pathname).toBe('/api/v1/playground/live-data/ncci');
-    expect(url.searchParams.get('cpt_a')).toBe('97153');
-    expect(url.searchParams.get('cpt_b')).toBe('97155');
+    expect(url.searchParams.get('cpt_a')).toBe('29881');
+    expect(url.searchParams.get('cpt_b')).toBe('29880');
   });
 
   it('playground_live_data_medicare_fee sends the cpt param', async () => {
     const mockFetch = makeFetchMock(200, { rate: 62.5 });
     vi.stubGlobal('fetch', mockFetch);
 
-    await playgroundLiveDataMedicareFee.execute(new UpstreamDataClient(KEYED_ENV), { cpt: '97153' });
+    await playgroundLiveDataMedicareFee.execute(new UpstreamDataClient(KEYED_ENV), { cpt: '99213' });
 
     const url = lastCalledUrl(mockFetch);
     expect(url.pathname).toBe('/api/v1/playground/live-data/medicare-fee');
-    expect(url.searchParams.get('cpt')).toBe('97153');
+    expect(url.searchParams.get('cpt')).toBe('99213');
   });
 });

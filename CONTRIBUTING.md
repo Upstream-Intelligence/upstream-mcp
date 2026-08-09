@@ -15,7 +15,7 @@ Thanks for your interest. Contributions are welcome.
 - Additional MCP tools that wrap public Upstream API endpoints
 - Bug fixes and reliability improvements
 - Documentation improvements
-- Specialty-specific tool enhancements (ABA, SNF, PT/OT, dental, dialysis, imaging, home health)
+- Dataset-specific tool enhancements across the aligned catalog (specialty-clinic, oncology, pain-management, cardiology, gastroenterology, orthopedics-msk, infusion-centers, ophthalmology)
 - Test coverage improvements
 
 ## Out of scope
